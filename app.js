@@ -854,10 +854,17 @@
       inGame ? h('div', { class: 'panel-actions' },
         h('button', { class: 'btn', onclick: () => { d.close(); restart(false); } }, 'リトライ'),
         h('button', { class: 'btn', onclick: () => { d.close(); saveCurrent(true); renderTitle(); show('title'); } }, 'ホームに戻る')) : null,
-      !inGame ? h('button', { class: 'btn danger small reset', onclick: () => resetFlow() }, '進捗をリセット') : null);
+      !inGame ? h('button', { class: 'btn danger small reset', onclick: () => resetFlow() }, '進捗をリセット') : null,
+      h('p', { class: 'set-note diag', text: diagText() }));
     const d = dialog({ title: '設定', body, cls: 'settings-panel' });
   }
   App.openSettings = openSettings;
+  // screen measurements, shown small in settings to help diagnose layout problems on phones
+  function diagText() {
+    const st = document.getElementById('stage').getBoundingClientRect();
+    const mode = navigator.standalone === true ? 'ホーム画面' : (matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches ? 'アプリ' : 'ブラウザ');
+    return '表示情報: ' + mode + ' / 画面 ' + screen.width + '×' + screen.height + ' / 窓 ' + innerWidth + '×' + innerHeight + ' / ゲーム ' + Math.round(st.width) + '×' + Math.round(st.height);
+  }
   function resetFlow() {
     confirmDlg('進捗をリセット', 'クリアしたレベル、金貨、アイテム、図鑑などがすべて最初に戻ります。', '次へ', () => {
       confirmDlg('本当にリセットしますか?', 'この操作は取り消せません。', 'リセットする', () => {

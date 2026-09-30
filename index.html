@@ -52,7 +52,10 @@ body {
 #stage { position: fixed; top: 0; left: 0; right: 0; bottom: 0; overflow: hidden; }
 /* Home-screen app on iPhone: the page area can stop short of the bottom edge, so size the stage
    to the full screen (set from script as --app-h) instead of trusting the layout viewport. */
-html.standalone #stage { bottom: auto; height: var(--app-h, 100lvh); }
+@media (display-mode: standalone), (display-mode: fullscreen) {
+  #stage { bottom: auto; height: max(100vh, calc(100% + env(safe-area-inset-top, 0px)), var(--app-h, 0px)); }
+}
+html.standalone #stage { bottom: auto; height: max(100vh, calc(100% + env(safe-area-inset-top, 0px)), var(--app-h, 0px)); }
 #stage::before {
   content: ""; position: absolute; inset: 0; z-index: 0;
   background: var(--bg-p) center / cover no-repeat, radial-gradient(ellipse at 50% 30%, #3b2370, var(--night) 70%);
@@ -524,14 +527,14 @@ img { max-width: 100%; }
   <div id="toasts"></div>
 </div>
 
-<script src="engine.js?v=20261001004924" charset="utf-8"></script>
-<script src="data.js?v=20261001004924" charset="utf-8"></script>
-<script src="render.js?v=20261001004924" charset="utf-8"></script>
-<script src="audio.js?v=20261001004924" charset="utf-8"></script>
-<script src="store.js?v=20261001004924" charset="utf-8"></script>
-<script src="game.js?v=20261001004924" charset="utf-8"></script>
-<script src="mini.js?v=20261001004924" charset="utf-8"></script>
-<script src="app.js?v=20261001004924" charset="utf-8"></script>
+<script src="engine.js?v=20261001005538" charset="utf-8"></script>
+<script src="data.js?v=20261001005538" charset="utf-8"></script>
+<script src="render.js?v=20261001005538" charset="utf-8"></script>
+<script src="audio.js?v=20261001005538" charset="utf-8"></script>
+<script src="store.js?v=20261001005538" charset="utf-8"></script>
+<script src="game.js?v=20261001005538" charset="utf-8"></script>
+<script src="mini.js?v=20261001005538" charset="utf-8"></script>
+<script src="app.js?v=20261001005538" charset="utf-8"></script>
 <script>
   (function () {
     // iPhone / iPad home-screen app only (navigator.standalone exists only there)
@@ -548,7 +551,7 @@ img { max-width: 100%; }
     window.addEventListener('resize', fit);
     window.addEventListener('orientationchange', () => setTimeout(fit, 300));
   })();
-  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
     window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
   }
 </script>

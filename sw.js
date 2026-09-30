@@ -1,6 +1,6 @@
 /* Offline support: the page and scripts are fetched fresh when online (so updates arrive),
    images and data are served from the cache after the first load. */
-const VERSION = '20261001004924';
+const VERSION = '20261001005538';
 const CACHE = 'potion-' + VERSION;
 const CORE = [
   './', 'index.html', 'engine.js', 'data.js', 'render.js', 'audio.js', 'store.js', 'game.js', 'mini.js', 'app.js',
@@ -28,7 +28,9 @@ self.addEventListener('fetch', (e) => {
   const isCode = sameOrigin && (req.mode === 'navigate' || /\.(js|html|json|webmanifest)$/.test(url.pathname) || url.pathname.endsWith('/'));
   if (isCode) {
     // network first, cache as fallback
-    e.respondWith(fetch(req, { cache: 'no-cache' }).then((res) => {
+    // a navigation Request cannot be re-used with options, so fetch its URL instead
+    const fresh = req.mode === 'navigate' ? fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' }) : fetch(req, { cache: 'no-cache' });
+    e.respondWith(fresh.then((res) => {
       if (res.ok) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); }
       return res;
     }).catch(() => caches.match(req).then((r) => r || caches.match('index.html'))));
