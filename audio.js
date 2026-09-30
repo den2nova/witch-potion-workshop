@@ -1,7 +1,8 @@
-/* 魔女のポーション工房 — synthesized sound effects and music-box BGM (Web Audio, no audio files) */
+/* 魔女のポーション工房 — sound: recorded effects (効果音ラボ) and BGM (こんとどぅふぇ) played through Web Audio.
+   Synthesized sounds remain as a fallback while files load or if a file is missing. */
 (function (root) {
   'use strict';
-  const A = { ctx: null, se: null, bgm: null, seVol: 0.8, bgmVol: 0.6, track: null, timer: null, hidden: false };
+  const A = { ctx: null, se: null, bgm: null, seVol: 0.8, bgmVol: 0.6, hidden: false, buffers: {}, tracks: {}, current: null };
 
   A.init = function () {
     if (A.ctx) { if (A.ctx.state === 'suspended') A.ctx.resume(); return; }
@@ -10,16 +11,67 @@
     try {
       A.ctx = new AC();
       A.se = A.ctx.createGain(); A.se.gain.value = A.seVol; A.se.connect(A.ctx.destination);
-      A.bgm = A.ctx.createGain(); A.bgm.gain.value = A.bgmVol * 0.35; A.bgm.connect(A.ctx.destination);
+      A.bgm = A.ctx.createGain(); A.bgm.gain.value = A.bgmVol * 0.7; A.bgm.connect(A.ctx.destination);
       A.noiseBuf = A.ctx.createBuffer(1, A.ctx.sampleRate, A.ctx.sampleRate);
       const d = A.noiseBuf.getChannelData(0);
       for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-    } catch (e) { A.ctx = null; }
+    } catch (e) { A.ctx = null; return; }
+    loadEffects();
   };
+
+  const BASE = 'assets/';
+  const EFFECTS = ['select', 'pour', 'pourDeep', 'error', 'cork', 'chime', 'reveal', 'curtain', 'coin', 'magic',
+    'swish', 'sparkle', 'bump', 'flap', 'tap', 'letter', 'receive', 'catch'];
+  function decode(buf) {
+    return new Promise((resolve, reject) => {
+      try {
+        const p = A.ctx.decodeAudioData(buf, resolve, reject);
+        if (p && p.then) p.then(resolve, reject);
+      } catch (e) { reject(e); }
+    });
+  }
+  function loadEffects() {
+    EFFECTS.forEach((n) => {
+      fetch(BASE + 'se/' + n + '.mp3').then((r) => (r.ok ? r.arrayBuffer() : Promise.reject()))
+        .then(decode).then((b) => { A.buffers[n] = b; }).catch(() => {});
+    });
+  }
+  // BGM files are stored scrambled (see tools/scramble.py) and restored here in memory
+  const KEY = new TextEncoder().encode('witch-potion-workshop:bgm');
+  function unscramble(ab) {
+    const src = new Uint8Array(ab, 4);
+    const out = new Uint8Array(src.length);
+    const k = KEY.length;
+    for (let i = 0; i < src.length; i++) out[i] = src[i] ^ KEY[i % k] ^ ((i * 31) & 0xff);
+    return out.buffer;
+  }
+  function loadMusic(name) {
+    if (!A.tracks[name]) {
+      A.tracks[name] = fetch(BASE + 'bgm/' + name + '.bin').then((r) => (r.ok ? r.arrayBuffer() : Promise.reject()))
+        .then((ab) => decode(unscramble(ab))).catch(() => null);
+    }
+    return A.tracks[name];
+  }
+  function playBuffer(buf, vol, opts) {
+    const c = A.ctx;
+    const src = c.createBufferSource();
+    src.buffer = buf;
+    if (opts && opts.rate) src.playbackRate.value = opts.rate;
+    const g = c.createGain();
+    g.gain.value = vol == null ? 1 : vol;
+    src.connect(g); g.connect(A.se);
+    const t = c.currentTime;
+    if (opts && opts.dur) {
+      g.gain.setValueAtTime(g.gain.value, t + Math.max(0, opts.dur - 0.15));
+      g.gain.linearRampToValueAtTime(0.0001, t + opts.dur);
+      src.start(t, 0, opts.dur + 0.05);
+    } else src.start(t);
+    return src;
+  }
   A.setVolumes = function (se, bgm) {
     A.seVol = se / 100; A.bgmVol = bgm / 100;
     if (A.se) A.se.gain.value = A.seVol;
-    if (A.bgm) A.bgm.gain.setTargetAtTime(A.bgmVol * 0.35, A.ctx.currentTime, 0.1);
+    if (A.bgm) A.bgm.gain.setTargetAtTime(A.bgmVol * BGM_LEVEL, A.ctx.currentTime, 0.1);
   };
 
   function tone(freq, t0, dur, type, vol, dest, attack) {
@@ -87,71 +139,78 @@
     flap() { const t = A.ctx.currentTime; noise(t, 0.08, 700, 1.5, 0.08); },
     tap() { const t = A.ctx.currentTime; tone(1200, t, 0.05, 'sine', 0.12); },
   };
+  const SAMPLE_OPTS = {
+    pour: (n) => ({ dur: 0.45 + 0.25 * (n || 1) }),
+    pourDeep: (n) => ({ dur: 0.7 + 0.25 * (n || 1) }),
+    swish: (speed) => ({ vol: 0.35 + 0.5 * Math.min(1, speed || 0), rate: 0.9 + 0.3 * Math.min(1, speed || 0) }),
+    catch: () => ({ vol: 0.9 }),
+  };
+  let lastSwish = 0;
   A.play = function (name, arg) {
     if (!A.ctx || A.seVol <= 0) return;
-    try { SFX[name] && SFX[name](arg); } catch (e) { /* ignore */ }
+    try {
+      if (name === 'fanfare') { A.jingle('clear'); return; }
+      const buf = A.buffers[name];
+      if (buf) {
+        if (name === 'swish') { const t = A.ctx.currentTime; if (t - lastSwish < 0.18) return; lastSwish = t; }
+        const o = SAMPLE_OPTS[name] ? SAMPLE_OPTS[name](arg) : {};
+        playBuffer(buf, o.vol, o);
+        return;
+      }
+      const alias = { letter: 'tap', receive: 'coin', catch: 'select' }[name] || name;
+      SFX[alias] && SFX[alias](arg);
+    } catch (e) { /* ignore */ }
+  };
+  // short music cue over the current BGM (the BGM dips while it plays)
+  A.jingle = function (name) {
+    if (!A.ctx) return;
+    loadMusic(name).then((buf) => {
+      if (!buf) { SFX.fanfare(); return; }
+      const t = A.ctx.currentTime;
+      if (A.current) {
+        A.bgm.gain.setTargetAtTime(A.bgmVol * 0.15, t, 0.05);
+        A.bgm.gain.setTargetAtTime(A.bgmVol * BGM_LEVEL, t + buf.duration, 0.4);
+      }
+      playBuffer(buf, 0.9);
+    });
   };
 
-  // ---- music box BGM: three moods, looped phrases on a pentatonic scale ----
-  const TRACKS = {
-    home: { bpm: 72, root: 60, scale: [0, 2, 4, 7, 9, 12, 14, 16], chords: [[0, 4, 7], [-3, 0, 4], [-7, -3, 0], [-5, -1, 2]], wave: 'sine' },
-    mini: { bpm: 118, root: 62, scale: [0, 2, 4, 7, 9, 12, 14, 16], chords: [[0, 4, 7], [5, 9, 12], [7, 11, 14], [0, 4, 7]], wave: 'triangle' },
-    mystic: { bpm: 64, root: 57, scale: [0, 2, 3, 7, 8, 12, 14, 15], chords: [[0, 3, 7], [-4, 0, 3], [-2, 2, 5], [-5, -2, 2]], wave: 'sine' },
-  };
-  const midi = (m) => 440 * Math.pow(2, (m - 69) / 12);
-  function musicBox(freq, t, dur, vol, wave) {
-    const c = A.ctx;
-    const o = c.createOscillator(); const o2 = c.createOscillator();
-    const g = c.createGain();
-    o.type = wave; o2.type = 'sine';
-    o.frequency.value = freq; o2.frequency.value = freq * 3.01;
-    const g2 = c.createGain(); g2.gain.value = 0.12;
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(vol, t + 0.01);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    o.connect(g); o2.connect(g2); g2.connect(g); g.connect(A.bgm);
-    o.start(t); o2.start(t); o.stop(t + dur + 0.05); o2.stop(t + dur + 0.05);
-  }
-  let seq = null;
-  function schedule() {
-    if (!A.ctx || !seq) return;
-    const T = TRACKS[seq.name];
-    const beat = 60 / T.bpm / 2;
-    while (seq.next < A.ctx.currentTime + 0.6) {
-      const step = seq.step;
-      const bar = Math.floor(step / 8) % T.chords.length;
-      const chord = T.chords[bar];
-      const t = seq.next;
-      if (step % 8 === 0) chord.forEach((n) => musicBox(midi(T.root - 12 + n), t, beat * 7, 0.05, 'sine'));
-      // melody: deterministic pseudo-random walk per phrase
-      const r = Math.sin(step * 12.9898 + seq.seed) * 43758.5453;
-      const rnd = r - Math.floor(r);
-      if (rnd < (seq.name === 'mini' ? 0.8 : 0.62)) {
-        const idx = Math.floor(rnd * 997) % T.scale.length;
-        const note = T.root + T.scale[idx] + (step % 16 < 8 ? 0 : (chord[0] > 3 ? 0 : 0));
-        musicBox(midi(note), t, beat * 3, 0.07, T.wave);
-      }
-      seq.step = (step + 1) % (8 * T.chords.length * 4);
-      seq.next += beat;
-    }
-  }
+  // ---- BGM: looping tracks with a short crossfade ----
+  const BGM_LEVEL = 0.7;
   A.music = function (name) {
     if (!A.ctx) return;
-    if (seq && seq.name === name) return;
-    A.bgm.gain.setTargetAtTime(0.0001, A.ctx.currentTime, 0.15);
-    setTimeout(() => {
-      seq = name ? { name, step: 0, next: A.ctx.currentTime + 0.05, seed: name.length * 7.1 } : null;
-      if (name) A.bgm.gain.setTargetAtTime(A.bgmVol * 0.35, A.ctx.currentTime, 0.2);
-    }, 500);
-    if (!A.timer) A.timer = setInterval(() => { if (!A.hidden) schedule(); }, 150);
+    if (A.current && A.current.name === name) return;
+    const token = {};
+    A.want = token;
+    const old = A.current;
+    if (old) {
+      old.gain.gain.setTargetAtTime(0.0001, A.ctx.currentTime, 0.15);
+      setTimeout(() => { try { old.src.stop(); } catch (e) { /* ignore */ } }, 800);
+      A.current = null;
+    }
+    if (!name) return;
+    loadMusic(name).then((buf) => {
+      if (!buf || A.want !== token) return;
+      const c = A.ctx;
+      const src = c.createBufferSource();
+      src.buffer = buf;
+      src.loop = true;
+      const g = c.createGain();
+      g.gain.setValueAtTime(0.0001, c.currentTime);
+      g.gain.setTargetAtTime(1, c.currentTime, 0.2);
+      src.connect(g); g.connect(A.bgm);
+      src.start();
+      A.current = { name, src, gain: g };
+    });
   };
+  A.preloadMusic = function () { ['home', 'mini', 'mystic', 'clear'].forEach((n) => { if (A.ctx) loadMusic(n); }); };
   document.addEventListener('visibilitychange', () => {
     A.hidden = document.hidden;
     if (!A.ctx) return;
     if (document.hidden) A.bgm.gain.setTargetAtTime(0.0001, A.ctx.currentTime, 0.05);
     else {
-      if (seq) seq.next = A.ctx.currentTime + 0.1;
-      A.bgm.gain.setTargetAtTime(A.bgmVol * 0.35, A.ctx.currentTime, 0.2);
+      if (A.ctx.state === 'suspended') A.ctx.resume();
+      A.bgm.gain.setTargetAtTime(A.bgmVol * BGM_LEVEL, A.ctx.currentTime, 0.2);
     }
   });
 

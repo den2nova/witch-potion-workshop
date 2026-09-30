@@ -170,7 +170,7 @@
               G.score += 10 * mult;
               G.fill.push(COLORS[it.kind]);
               if (G.fill.length > 12) G.fill.shift();
-              Snd.play('select');
+              Snd.play('catch');
             } else { G.streak = 0; Snd.play('error'); }
           }
         }

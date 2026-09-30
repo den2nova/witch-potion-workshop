@@ -113,12 +113,16 @@
     App.screen = id;
     if (id !== 'game') B.stop();
     if (id !== 'mini' && root.Minis) root.Minis.stop();
-    const music = { title: 'home', levels: 'home', game: App.game && App.game.lv && App.game.lv.k.includes('giant') || (App.game && App.game.daily) ? 'mystic' : 'home', shop: 'home', collection: 'mystic', achievements: 'home', daily: 'mystic', minis: 'mini', mini: 'mini' }[id];
-    if (music) Snd.music(music);
+    Snd.music(musicFor(id));
     updateChrome();
     window.scrollTo(0, 0);
   }
   App.show = show;
+  function musicFor(id) {
+    const g = App.game;
+    if (id === 'game') return g && g.lv && (g.lv.k.includes('giant') || g.daily) ? 'mystic' : 'home';
+    return { title: 'home', levels: 'home', shop: 'home', collection: 'mystic', achievements: 'home', daily: 'mystic', minis: 'mini', mini: 'mini' }[id] || 'home';
+  }
 
   function updateChrome() {
     $$('[data-coins]').forEach((el) => { el.textContent = S.coins().toLocaleString('ja-JP'); });
@@ -219,7 +223,13 @@
   }
   function dailyUnlocked() { return !!S.p.lv[C.DAILY_UNLOCK]; }
 
-  function startAudio() { Snd.init(); }
+  function startAudio() {
+    const first = !Snd.ctx;
+    Snd.init();
+    if (first && Snd.ctx) { Snd.music(musicFor(App.screen)); Snd.preloadMusic(); }
+  }
+  document.addEventListener('pointerdown', startAudio, { capture: true });
+  document.addEventListener('keydown', startAudio, { capture: true });
 
   const menu = {
     play: () => startLevel(nextPlayLevel()),
@@ -326,10 +336,11 @@
       h('span', { class: 'lb-n', text: (i + 1) + '日目' }),
       h('span', { class: 'lb-r', text: r.coins ? r.coins + '枚' : r.undo ? '砂時計' : '' }))));
     const letter = h('div', { class: 'letter' }, img('letter', 'letter-img'));
+    Snd.play('letter');
     dialog({
       title: '魔女からの手紙', cls: 'login',
       body: h('div', null, letter, h('p', { class: 'panel-text', text: '今日も工房へようこそ。ささやかな贈り物です: ' + parts.join('、') }), week),
-      buttons: [{ label: '受け取る', primary: true, onClick: () => { S.grant({ coins: rw.coins || 0, undo: rw.undo || 0, shuffle: rw.shuffle || 0 }, 'ログインボーナス'); Snd.play('coin'); } }],
+      buttons: [{ label: '受け取る', primary: true, onClick: () => { S.grant({ coins: rw.coins || 0, undo: rw.undo || 0, shuffle: rw.shuffle || 0 }, 'ログインボーナス'); Snd.play('receive'); } }],
       closable: false,
     });
   }
