@@ -42,13 +42,17 @@
   --safe-b: env(safe-area-inset-bottom, 0px);
 }
 html, body { height: 100%; }
+html { background: var(--night); }
 body {
   margin: 0; background: var(--night); color: var(--text);
   font-family: var(--font-body); font-size: 15px; line-height: 1.6;
   overflow: hidden; touch-action: manipulation; overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
 }
-#stage { position: fixed; inset: 0; overflow: hidden; }
+#stage { position: fixed; top: 0; left: 0; right: 0; bottom: 0; overflow: hidden; }
+/* Home-screen app on iPhone: the page area can stop short of the bottom edge, so size the stage
+   to the full screen (set from script as --app-h) instead of trusting the layout viewport. */
+html.standalone #stage { bottom: auto; height: var(--app-h, 100lvh); }
 #stage::before {
   content: ""; position: absolute; inset: 0; z-index: 0;
   background: var(--bg-p) center / cover no-repeat, radial-gradient(ellipse at 50% 30%, #3b2370, var(--night) 70%);
@@ -520,15 +524,30 @@ img { max-width: 100%; }
   <div id="toasts"></div>
 </div>
 
-<script src="engine.js?v=20261001004715" charset="utf-8"></script>
-<script src="data.js?v=20261001004715" charset="utf-8"></script>
-<script src="render.js?v=20261001004715" charset="utf-8"></script>
-<script src="audio.js?v=20261001004715" charset="utf-8"></script>
-<script src="store.js?v=20261001004715" charset="utf-8"></script>
-<script src="game.js?v=20261001004715" charset="utf-8"></script>
-<script src="mini.js?v=20261001004715" charset="utf-8"></script>
-<script src="app.js?v=20261001004715" charset="utf-8"></script>
+<script src="engine.js?v=20261001004924" charset="utf-8"></script>
+<script src="data.js?v=20261001004924" charset="utf-8"></script>
+<script src="render.js?v=20261001004924" charset="utf-8"></script>
+<script src="audio.js?v=20261001004924" charset="utf-8"></script>
+<script src="store.js?v=20261001004924" charset="utf-8"></script>
+<script src="game.js?v=20261001004924" charset="utf-8"></script>
+<script src="mini.js?v=20261001004924" charset="utf-8"></script>
+<script src="app.js?v=20261001004924" charset="utf-8"></script>
 <script>
+  (function () {
+    // iPhone / iPad home-screen app only (navigator.standalone exists only there)
+    if (window.navigator.standalone !== true) return;
+    const root = document.documentElement;
+    root.classList.add('standalone');
+    const fit = () => {
+      const landscape = window.innerWidth > window.innerHeight;
+      const sw = screen.width, sh = screen.height;
+      const full = landscape ? Math.min(sw, sh) : Math.max(sw, sh);
+      root.style.setProperty('--app-h', Math.max(full, window.innerHeight) + 'px');
+    };
+    fit();
+    window.addEventListener('resize', fit);
+    window.addEventListener('orientationchange', () => setTimeout(fit, 300));
+  })();
   if ('serviceWorker' in navigator && location.protocol === 'https:') {
     window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
   }
