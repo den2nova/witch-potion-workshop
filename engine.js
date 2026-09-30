@@ -163,7 +163,7 @@
       const moved = dst.layers.splice(dst.layers.length - h.n, h.n);
       moved.forEach((l) => src.layers.push(l));
     }
-    s.moves++; // an undone move still counts towards the move total
+    // using an item never adds to the move count (the undone move itself stays counted)
     return h;
   }
 
