@@ -113,7 +113,7 @@
 
   const ITEMS = {
     undo: { name: '時戻りの砂時計', short: '一手戻す', icon: 'item_icons_0', desc: '直前の1手を取り消す' },
-    shuffle: { name: 'かき混ぜの杖', short: 'シャッフル', icon: 'item_icons_1', desc: '未完成の瓶の中身を混ぜ直す' },
+    shuffle: { name: 'かき混ぜの杖', short: 'シャッフル', icon: 'item_icons_1', desc: '選んだ瓶1本の中身を混ぜ直す' },
     bottle: { name: '予備の薬瓶', short: 'ボトル追加', icon: 'item_icons_2', desc: '空の瓶を1本追加(1レベル2本まで)' },
   };
 

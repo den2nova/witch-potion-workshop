@@ -400,7 +400,7 @@
       try { state = cur.st; if (!state.bottles || state.cap !== lv.cap || (lv.g && (!state.giant || state.giant.capacity == null))) state = null; } catch (e) { state = null; }
     }
     if (!state) state = E.fromLevel(lv);
-    B.guide = null;
+    B.guide = null; B.pick = null; B.pickable = null; $('#t-shuffle').classList.remove('pulse');
     $('#hand').hidden = true; $('#hint').hidden = true; $('#skip-tut').hidden = true;
     App.game = { n, lv, daily: opts.daily || null, s: state, tutorial: null, freeUse: {}, lastSave: 0 };
     $('#g-level').textContent = opts.daily ? 'デイリー ' + opts.daily.slice(5).replace('-', '/') : 'レベル ' + n;
@@ -480,7 +480,7 @@
     $('#g-moves').textContent = s.moves;
     const can = {
       undo: s.history.length > 0,
-      shuffle: s.bottles.filter((b) => !E.isLocked(b) && b.layers.length && !E.isComplete(b, s.cap)).length >= 2,
+      shuffle: s.bottles.some((b, i) => E.canShuffleBottle(s, i)),
       bottle: s.added < 2,
     };
     for (const k of ['undo', 'shuffle', 'bottle']) {
@@ -541,36 +541,56 @@
     });
   }
 
-  async function doShuffle(free) {
+  // shuffle item: the player picks one small bottle, and only that bottle's layers are mixed
+  function doShuffle(free) {
     const g = App.game;
     const s = g.s;
-    const rng = E.mulberry32((Date.now() & 0xffffff) ^ (s.moves * 7919));
+    if (B.pick) { cancelPick(); return; }
+    if (!s.bottles.some((b, i) => E.canShuffleBottle(s, i))) { toast('混ぜられる瓶がありません'); return; }
+    B.selected = null;
+    B.pickable = (i) => i !== 'g' && E.canShuffleBottle(s, i);
+    B.pick = (i) => { cancelPick(); shuffleOne(i, free); };
+    $('#t-shuffle').classList.add('pulse');
+    showHint('混ぜる瓶を1本選んでください。もう一度杖を押すとやめます。');
+  }
+  function cancelPick() {
+    B.pick = null;
+    B.pickable = null;
+    $('#t-shuffle').classList.remove('pulse');
+    hideHint();
+  }
+  App.cancelPick = cancelPick;
+
+  async function shuffleOne(i, free) {
+    const g = App.game;
+    const s = g.s;
+    const rng = E.mulberry32((Date.now() & 0xffffff) ^ (s.moves * 7919) ^ (i * 104729));
     $('#g-busy').hidden = false;
     let found = null;
     for (let tries = 0; tries < 20; tries++) {
       const c = E.clone(s);
-      E.shuffle(c, rng);
+      if (!E.shuffleBottle(c, i, rng)) continue;
       c.history = [];
-      if (c.bottles.some((b) => !E.isLocked(b) && b.layers.length && E.isComplete(b, c.cap) && !s.bottles.some((x) => x === b))) {
-        // freshly completed bottles are fine; nothing to do
-      }
-      const ok = await checkSolvable(c);
+      E.updateCurtains(c);
+      const ok = E.isSolved(c) || await checkSolvable(c);
       if (ok) { found = c; break; }
     }
     $('#g-busy').hidden = true;
-    if (!found) { toast('この局面では使えません(アイテムは減っていません)'); return; }
-    // swap in the shuffled layers with a swirl
-    s.bottles.forEach((b, i) => { b.layers = found.bottles[i].layers; });
+    if (!found) { toast('この瓶はいま混ぜられません(アイテムは減っていません)'); return; }
+    s.bottles[i].layers = found.bottles[i].layers;
     s.history = [];
     s.shuffled = true;
     s.itemsUsed++;
     if (free) g.freeUse.shuffle = false; else S.spend('shuffle', 1, 'シャッフル');
     Snd.play('magic');
-    B.rects.forEach((r, i) => { if (!E.isLocked(s.bottles[i])) { B.reveals[i] = performance.now(); B.burst(r.x + r.w / 2, r.y + r.h * 0.4, 5, '#c7a6ff', 0.7); } });
+    const r = B.rects[i];
+    B.reveals[i] = performance.now();
+    B.burst(r.x + r.w / 2, r.y + r.h * 0.4, 14, '#c7a6ff', 0.8);
     E.updateCurtains(s);
     tutorialItemUsed('shuffle');
     updateToolbar();
     scheduleSave();
+    if (E.isSolved(s)) B.celebrate(false);
   }
 
   function quickBuy(k) {
@@ -785,7 +805,7 @@
     } else if (t.kind === 'shuffle' && g.s.moves === 3) {
       g.freeUse.shuffle = true;
       updateToolbar();
-      showHint('行き詰まったら「かき混ぜの杖」で中身を混ぜ直せます。今回は無料です(このレベルの星は2つまでになります)。', '#t-shuffle');
+      showHint('行き詰まったら「かき混ぜの杖」で、選んだ瓶1本の中身を混ぜ直せます。今回は無料です(このレベルの星は2つまでになります)。', '#t-shuffle');
     }
   }
   function tutorialItemUsed(k) {

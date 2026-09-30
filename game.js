@@ -279,7 +279,8 @@
     const complete = E.isComplete(b, s.cap);
     const locked = E.isLocked(b);
     const ca = Board.curtainAnims[i];
-    const guideHi = Board.guide && (Board.guide.from === i || Board.guide.to === i) && (Board.guide.from === i ? Board.selected === null : Board.selected !== null);
+    const guideHi = (Board.guide && (Board.guide.from === i || Board.guide.to === i) && (Board.guide.from === i ? Board.selected === null : Board.selected !== null))
+      || (Board.pickable && Board.pickable(i));
     if (!locked || ca) {
       const segs = segsFrom(b.layers, s.cap, extra);
       R.drawVessel(ctx, v, rect, segs, {
@@ -606,6 +607,12 @@
     const s = Board.s;
     if (!s || E.isSolved(s)) return;
     if (Board.hooks.canInteract && !Board.hooks.canInteract()) return;
+    if (Board.pick) {
+      if (i !== null && Board.pickable && Board.pickable(i)) Board.pick(i);
+      else if (i === null && root.App && root.App.cancelPick) root.App.cancelPick();
+      else Snd.play('error');
+      return;
+    }
     if (i === null) { Board.selected = null; return; }
     // tutorial gate
     if (Board.guide) {

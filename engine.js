@@ -211,6 +211,25 @@
     return idx;
   }
 
+  // the shuffle item mixes the layers of ONE chosen small bottle
+  function canShuffleBottle(s, i) {
+    const b = s.bottles[i];
+    if (!b || isLocked(b) || b.layers.length < 2 || isComplete(b, s.cap)) return false;
+    return b.layers.some((l) => l.c !== b.layers[0].c);
+  }
+  function shuffleBottle(s, i, rng) {
+    const b = s.bottles[i];
+    const before = b.layers.map((l) => l.c).join(',');
+    let layers = b.layers.slice();
+    for (let t = 0; t < 12; t++) {
+      layers = shuffleArr(b.layers.slice(), rng);
+      if (layers.map((l) => l.c).join(',') !== before) break;
+    }
+    b.layers = layers;
+    top(b).h = false;
+    return b.layers.map((l) => l.c).join(',') !== before;
+  }
+
   function addBottle(s) {
     s.bottles.push({ layers: [], curtain: null, extra: true });
     s.added++;
@@ -408,7 +427,7 @@
 
   const Engine = {
     mulberry32, shuffleArr, clone, fromLevel, top, isLocked, isComplete, topRun, zoneColor,
-    canPour, pourAmount, pour, undo, isSolved, legalMoves, isPointless, shuffle, addBottle,
+    canPour, pourAmount, pour, undo, isSolved, legalMoves, isPointless, shuffle, canShuffleBottle, shuffleBottle, addBottle,
     completedCount, updateCurtains, solve,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = Engine;
