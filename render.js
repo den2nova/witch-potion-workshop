@@ -292,6 +292,13 @@
       }
       release(liquid);
     }
+    // things that sit inside the glass (a cork in the neck) go under the front highlights
+    if (opts.inner) {
+      ctx.save();
+      ctx.translate(-rect.x, -rect.y);
+      opts.inner(ctx);
+      ctx.restore();
+    }
     ctx.drawImage(front, 0, 0, rect.w, rect.h);
     ctx.restore();
   };

@@ -289,8 +289,8 @@
         glow: selected ? 1 : guideHi ? 0.6 + 0.4 * Math.sin(t / 200) : 0,
         glowColor: guideHi ? 'rgba(140,255,230,0.95)' : undefined,
         shine: Board.revealShine(i, t),
+        inner: complete ? (c) => drawCork(c, i, rect, v) : null,
       });
-      if (complete) drawCork(ctx, i, rect, v);
     }
     if (locked || ca) drawCurtain(ctx, i, rect, b, t);
   }
@@ -306,10 +306,11 @@
   function drawCork(ctx, key, rect, v) {
     const cap = R.get('bottle_cap');
     if (!cap) return;
-    const w = rect.w * Math.min(0.9, v.geo.neckW * 0.9) * (key === 'g' ? 0.9 : 1);
+    // the cork sits down inside the neck and is seen through the glass
+    const w = rect.w * Math.min(0.8, v.geo.neckW * 0.78) * (key === 'g' ? 0.9 : 1);
     const h = w * cap.naturalHeight / cap.naturalWidth;
     const m = mouthOf(rect, v);
-    let y = m.y - h * 0.55;
+    let y = m.y - h * 0.28;
     const t0 = Board.corks[key];
     let alpha = 1;
     if (t0) {
