@@ -1,6 +1,6 @@
 /* Offline support: the page and scripts are fetched fresh when online (so updates arrive),
    images and data are served from the cache after the first load. */
-const VERSION = '20261001020058';
+const VERSION = '20261001021250';
 const CACHE = 'potion-' + VERSION;
 const CORE = [
   './', 'index.html', 'engine.js', 'data.js', 'render.js', 'audio.js', 'store.js', 'game.js', 'mini.js', 'app.js',
