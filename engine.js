@@ -217,14 +217,22 @@
     if (!b || isLocked(b) || b.layers.length < 2 || isComplete(b, s.cap)) return false;
     return b.layers.some((l) => l.c !== b.layers[0].c);
   }
+  // layers that already sit together in the same colour move as one block, so they are never split up
   function shuffleBottle(s, i, rng) {
     const b = s.bottles[i];
-    const before = b.layers.map((l) => l.c).join(',');
+    const key = (ls) => ls.map((l) => l.c).join(',');
+    const before = key(b.layers);
+    const blocks = [];
+    b.layers.forEach((l) => {
+      const last = blocks[blocks.length - 1];
+      if (last && last[0].c === l.c) last.push(l); else blocks.push([l]);
+    });
     let layers = b.layers.slice();
-    for (let t = 0; t < 12; t++) {
-      layers = shuffleArr(b.layers.slice(), rng);
-      if (layers.map((l) => l.c).join(',') !== before) break;
+    for (let t = 0; t < 20; t++) {
+      layers = [].concat(...shuffleArr(blocks.slice(), rng));
+      if (key(layers) !== before) break;
     }
+    if (key(layers) === before && blocks.length > 1) layers = [].concat(...blocks.slice(1), blocks[0]);
     b.layers = layers;
     top(b).h = false;
     return b.layers.map((l) => l.c).join(',') !== before;
