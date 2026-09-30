@@ -178,19 +178,13 @@
     return out;
   }
 
+  // the giant bottle holds one colour: the filled part is solid, the rest shows a faint hint of the same colour
   function giantSegs(extraAmt) {
-    const s = Board.s;
-    const g = s.giant;
-    const total = g.zones.length * s.cap;
-    const filled = g.filled + (extraAmt || 0);
-    const out = [];
-    g.zones.forEach((c, z) => {
-      const z0 = z * s.cap, z1 = (z + 1) * s.cap;
-      const hex = GD.COLORS[c].hex;
-      const fillTop = clamp(filled, z0, z1);
-      if (fillTop > z0) out.push({ f0: z0 / total, f1: fillTop / total, color: hex, mark: Board.marks ? GD.COLORS[c].mark : null });
-      if (fillTop < z1) out.push({ f0: fillTop / total, f1: z1 / total, color: hex, ghost: true, mark: GD.COLORS[c].mark });
-    });
+    const g = Board.s.giant;
+    const col = GD.COLORS[g.color];
+    const f = clamp((g.filled + (extraAmt || 0)) / g.capacity, 0, 1);
+    const out = [{ f0: 0, f1: f, color: col.hex, mark: Board.marks ? col.mark : null }];
+    if (f < 1) out.push({ f0: f, f1: 1, color: col.hex, ghost: true });
     return out;
   }
 
@@ -258,7 +252,7 @@
         shine: Board.giantShine ? Board.giantShine() : 0,
       });
       drawTrim(ctx, g, Board.giantRect, s.giant.variant);
-      if (s.giant.filled >= s.giant.zones.length * s.cap) drawCork(ctx, 'g', Board.giantRect, g);
+      if (s.giant.filled >= s.giant.capacity) drawCork(ctx, 'g', Board.giantRect, g);
     }
 
     // bottles
@@ -428,7 +422,7 @@
     if (a.streamP > 0) {
       const mouth = R.localToWorld(rect, mx, my, angle, pivot);
       const dstFrac = toGiant
-        ? (s.giant.filled + a.n * a.fillP) / (s.giant.zones.length * s.cap)
+        ? (s.giant.filled + a.n * a.fillP) / s.giant.capacity
         : (s.bottles[a.to].layers.length + a.n * a.fillP) / s.cap;
       const bottom = surfaceY(dstRect, dv, dstFrac);
       const topY = mouth.y + 2;
@@ -536,7 +530,7 @@
     if (ev.zoneDone && !ev.giantDone) {
       Snd.play('chime');
       const r = Board.giantRect;
-      Board.burst(r.x + r.w / 2, surfaceY(r, Board.giant, s.giant.filled / (s.giant.zones.length * s.cap)), 24, '#fff', 0.8);
+      Board.burst(r.x + r.w / 2, surfaceY(r, Board.giant, s.giant.filled / s.giant.capacity), 24, '#fff', 0.8);
     }
     ev.revealed.forEach((i) => {
       Board.reveals[i] = t;

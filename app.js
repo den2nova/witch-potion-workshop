@@ -397,7 +397,7 @@
     let state = null;
     const cur = S.p.current;
     if (!opts.fresh && cur && cur.level === n && (cur.daily || null) === (opts.daily || null) && cur.st) {
-      try { state = cur.st; if (!state.bottles || state.cap !== lv.cap) state = null; } catch (e) { state = null; }
+      try { state = cur.st; if (!state.bottles || state.cap !== lv.cap || (lv.g && (!state.giant || state.giant.capacity == null))) state = null; } catch (e) { state = null; }
     }
     if (!state) state = E.fromLevel(lv);
     B.guide = null;
@@ -660,7 +660,7 @@
       if (lv.g) {
         const idx = giantIndex(g.n);
         const had = S.p.coll[idx];
-        S.p.coll[idx] = { level: g.n, zones: lv.g.z, stars: Math.max(stars, had ? had.stars : 0), date: had ? had.date : S.today() };
+        S.p.coll[idx] = { level: g.n, zones: [lv.g.c], stars: Math.max(stars, had ? had.stars : 0), date: had ? had.date : S.today() };
         registered = { idx, first: !had, newShape: !had && !Object.keys(S.p.coll).some((k) => +k !== idx && giantInfo(+k).s === lv.g.s) };
         checkSeries(notes);
       }

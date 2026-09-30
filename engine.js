@@ -23,7 +23,8 @@
   const clone = (o) => JSON.parse(JSON.stringify(o));
 
   // ---------- state ----------
-  // level (from levels.json): { n, k:[kinds], cap, b:[[c,...],...], h:[[0/1,...],...], cu:[{i,t:'c'|'n',v}], g:{s,v,z:[...]}, par }
+  // level (from levels.json): { n, k:[kinds], cap, b:[[c,...],...], h:[[0/1,...],...], cu:[{i,t:'c'|'n',v}], g:{s,v,c,cap,pre}, par }
+  // giant bottle: holds one colour c; it starts with pre layers inside and is full at cap layers
   function fromLevel(lv) {
     const s = {
       level: lv.n,
@@ -44,7 +45,7 @@
     (lv.cu || []).forEach((c) => {
       s.bottles[c.i].curtain = c.t === 'c' ? { type: 'color', colors: c.v, open: false } : { type: 'count', n: c.v, open: false };
     });
-    if (lv.g) s.giant = { shape: lv.g.s, variant: lv.g.v || null, zones: lv.g.z.slice(), filled: 0 };
+    if (lv.g) s.giant = { shape: lv.g.s, variant: lv.g.v || null, color: lv.g.c, capacity: lv.g.cap, pre: lv.g.pre, filled: lv.g.pre };
     // the top layer of each bottle is always visible
     s.bottles.forEach((b) => { if (b.layers.length) b.layers[b.layers.length - 1].h = false; });
     return s;
@@ -72,8 +73,7 @@
   function zoneColor(s) {
     const g = s.giant;
     if (!g) return null;
-    const z = Math.floor(g.filled / s.cap);
-    return z < g.zones.length ? g.zones[z] : null;
+    return g.filled < g.capacity ? g.color : null;
   }
 
   function canPour(s, i, j) {
@@ -93,7 +93,7 @@
 
   function pourAmount(s, i, j) {
     const run = topRun(s.bottles[i]);
-    const space = j === 'g' ? s.cap - (s.giant.filled % s.cap) : s.cap - s.bottles[j].layers.length;
+    const space = j === 'g' ? s.giant.capacity - s.giant.filled : s.cap - s.bottles[j].layers.length;
     return Math.min(run, space);
   }
 
@@ -128,9 +128,11 @@
     const moved = src.layers.splice(src.layers.length - n, n);
     const ev = { from: i, to: j, n, color, revealed: [], completed: false, curtains: [], zoneDone: false, giantDone: false };
     if (j === 'g') {
+      const before = s.giant.filled;
       s.giant.filled += n;
-      ev.zoneDone = s.giant.filled % s.cap === 0;
-      ev.giantDone = s.giant.filled >= s.giant.zones.length * s.cap;
+      // a small milestone every bottle's worth, for feedback
+      ev.zoneDone = Math.floor(before / s.cap) !== Math.floor(s.giant.filled / s.cap);
+      ev.giantDone = s.giant.filled >= s.giant.capacity;
     } else {
       const dst = s.bottles[j];
       moved.forEach((l) => dst.layers.push(l));
@@ -166,7 +168,7 @@
   }
 
   function isSolved(s) {
-    if (s.giant) return s.giant.filled >= s.giant.zones.length * s.cap;
+    if (s.giant) return s.giant.filled >= s.giant.capacity;
     return s.bottles.every((b) => (isLocked(b) ? b.layers.length === 0 : b.layers.length === 0 || isComplete(b, s.cap)));
   }
 
@@ -228,7 +230,8 @@
 
   function makeSolver(s) {
     const cap = s.cap;
-    const zones = s.giant ? s.giant.zones : null;
+    const gColor = s.giant ? s.giant.color : -1;
+    const gCap = s.giant ? s.giant.capacity : 0;
     const N = s.bottles.length;
     const curt = s.bottles.map((b) => (b.curtain ? b.curtain : null));
 
@@ -250,7 +253,7 @@
       return true;
     };
     const solved = (st) => {
-      if (zones) return st.g >= zones.length * cap;
+      if (gCap) return st.g >= gCap;
       for (let i = 0; i < N; i++) {
         const b = st.b[i];
         if (st.L[i]) { if (b.length) return false; } else if (b.length && !isDone(b)) return false;
@@ -264,8 +267,8 @@
         for (let k = 1; k < b.length; k++) if ((b[k] & 31) !== (b[k - 1] & 31)) v++;
         if (st.L[i] && b.length) v += 1;
       }
-      if (zones) {
-        const left = zones.length * cap - st.g;
+      if (gCap) {
+        const left = gCap - st.g;
         v += Math.ceil(left / cap) * 2;
       }
       return v;
@@ -297,14 +300,14 @@
     };
     const moves = (st) => {
       const out = [];
-      const zc = zones ? (st.g < zones.length * cap ? zones[Math.floor(st.g / cap)] : -1) : -1;
+      const zc = gCap && st.g < gCap ? gColor : -1;
       let emptyTried = false;
       for (let i = 0; i < N; i++) {
         const src = st.b[i];
         if (!src.length || st.L[i] || isDone(src)) continue;
         const tc = src[src.length - 1] & 31;
         const r = run(src);
-        if (zc >= 0 && tc === zc) out.push([i, -1, Math.min(r, cap - (st.g % cap))]);
+        if (zc >= 0 && tc === zc) out.push([i, -1, Math.min(r, gCap - st.g)]);
         const mono = r === src.length;
         emptyTried = false;
         for (let j = 0; j < N; j++) {
