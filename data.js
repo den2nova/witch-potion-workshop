@@ -163,6 +163,9 @@
     { id: 'tables', name: 'きれい好き', what: 'お掃除で拭いた机', stages: [10, 50, 100, 300, 1000], titles: ['お手伝い', 'きれい好き', '掃除上手', 'ピカピカ職人', '掃除の魔女'] },
     { id: 'chimneys', name: '夜空の散歩', what: 'ほうきで抜けた煙突', stages: [10, 30, 100, 300, 1000], titles: ['初飛行', '夜空の散歩', '夜間飛行士', '風の乗り手', '夜空の主'] },
     { id: 'cauldron', name: '大釜の達人', what: '大釜キャッチの最高点', stages: [100, 200, 300, 500, 800], titles: ['大釜の見習い', '受け止め上手', '大釜使い', '大釜の達人', '大釜の主'] },
+    { id: 'gachaOwn', name: '小物蒐集家', what: '集めたガチャアイテム', stages: [10, 25, 40, 50], titles: ['蒐集の芽', '小物好き', '宝物の番人', 'すべてを集めし魔女'] },
+    { id: 'gachaPulls', name: '運試し', what: 'ガチャを回した回数', stages: [10, 50, 100, 300, 1000], titles: ['はじめての運試し', '福引き好き', '運命の常連', '星に願う者', '千の願い'] },
+    { id: 'gachaSSR', name: '星の幸運', what: '集めたSSRのアイテム', stages: [1, 3, 5], titles: ['一番星', '三つ星の幸運', '五つ星の奇跡'] },
   ];
   const ACH_REWARD = (achId, stageIdx) => {
     if (achId === 'clear' && stageIdx === 8) return { coins: 1000 };
@@ -177,10 +180,89 @@
     'giant+blind': { title: '巨大ボトル × ブラインド', body: '霧に隠れた層を掘り出しながら、魔法瓶と同じ色を集めて満杯にしましょう。' },
     'blind+curtain': { title: 'ブラインド × カーテン', body: 'カーテンが開くと、その瓶の一番上の色だけが見えるようになります。' },
     shop: { title: '魔女の道具屋', body: 'パズルやミニゲームで貯めたコインで、アイテムや着せ替えを買えます。' },
+    gacha: { title: '星の福引き', body: '1回50コイン、10連は500コインで、図鑑に飾る小物が当たります。10連はR以上が1つ確定。1回ごとに1ポイントたまり、100ポイントで好きなレアリティの未所持アイテムと交換できます。持っている物が出たときはコインに戻ります。' },
     minigame: { title: 'ミニゲーム', body: '気分転換に遊んでコインを稼げます。何度でも遊べて、失敗しても最低10枚もらえます。' },
     daily: { title: 'デイリーチャレンジ', body: '1日1問。クリアするとその月のトロフィーにポーションが注がれ、1か月分そろうと満杯になります。' },
     cosmetics: { title: '着せ替え', body: '瓶と背景のデザインを変えられます。買う前にプレビューできます。' },
   };
 
-  root.GameData = { COLORS, SERIES, VARIANTS, BOTTLES, TROPHY_MOTIFS, TROPHY_COLORS, CONFIG, ITEMS, ACH, ACH_REWARD, RULE_CARDS };
+
+  // ---------------- gacha (collectibles only, no gameplay effect) ----------------
+  // each genre has 4 N, 3 R, 2 SR, 1 SSR: 20 / 15 / 10 / 5 items in total
+  const GACHA_GENRES = [
+    { id: 'tools', name: '魔法の道具', items: [
+      ['quill', 'N', '羽根ペン', '書いた呪文が少しだけ光る、カラスの羽根のペン。'],
+      ['lantern', 'N', '古いランタン', '雨の夜でも消えない、小さな青い炎が灯る。'],
+      ['spoon', 'N', '銀の匙', 'ポーションをかき混ぜると、ほんのり甘くなる。'],
+      ['gloves', 'N', '革の手袋', '熱い大釜もへっちゃらな、使い込んだ手袋。'],
+      ['hourglass', 'R', '砂時計の首飾り', '三分だけ時間がゆっくり流れる首飾り。'],
+      ['starmap', 'R', '星図の巻物', '広げるたびに、今夜の星の位置に描き変わる。'],
+      ['scales', 'R', '真鍮の天秤', '材料の重さだけでなく、気持ちの重さも量れる。'],
+      ['crystalball', 'SR', '予言の水晶', '覗き込むと、明日の自分が手を振っている。'],
+      ['moonwand', 'SR', '月光の杖', '月の光を集めて、夜道をそっと照らす杖。'],
+      ['grimoire', 'SSR', '大魔女の魔導書', '代々の大魔女が書き足してきた、終わりのない魔導書。'],
+    ] },
+    { id: 'familiars', name: '使い魔', items: [
+      ['frog', 'N', '小さなカエル', '雨の匂いがすると、ケロッと一声鳴く。'],
+      ['hedgehog', 'N', 'ちびハリネズミ', '丸まると、針が星の形に光る。'],
+      ['bat', 'N', 'ちびコウモリ', '夜のお使いが得意な、小さな相棒。'],
+      ['mouse', 'N', '白ねずみ', '材料棚のチーズを守る、働き者。'],
+      ['fox', 'R', '子ギツネ', 'しっぽで火を灯せる、いたずら好きの子ギツネ。'],
+      ['owl', 'R', 'もりのフクロウ', '本の在りかを何でも知っている物知り。'],
+      ['dragonegg', 'R', '竜の卵', 'ときどき中からコツコツと音がする。'],
+      ['moonrabbit', 'SR', '月の兎', '満月の夜だけ、餅つきの音が聞こえる。'],
+      ['firedrake', 'SR', '炎の小竜', '暖炉の火を絶やさない、小さな竜。'],
+      ['starphoenix', 'SSR', '星の不死鳥', '羽ばたくたびに星くずがこぼれる、伝説の鳥。'],
+    ] },
+    { id: 'gems', name: '宝石と鉱石', items: [
+      ['quartz', 'N', '水晶のかけら', '透かして見ると、景色が少しだけ優しくなる。'],
+      ['amethyst', 'N', '紫水晶', '眠る前に枕元に置くと、よい夢が見られる。'],
+      ['pyrite', 'N', '黄鉄鉱', '金貨と間違えられがちな、四角い石。'],
+      ['moonstone', 'N', '月長石の粒', '月の満ち欠けで、色が少し変わる。'],
+      ['amber', 'R', '琥珀', '中に小さな星の光が閉じ込められている。'],
+      ['fluorite', 'R', '蛍石', '暗い場所で、ほんのり緑に光る。'],
+      ['garnet', 'R', '柘榴石', '持ち主の勇気に合わせて、赤く輝く。'],
+      ['starsapphire', 'SR', '星彩サファイア', '光を当てると、六つの光の筋が浮かぶ。'],
+      ['opal', 'SR', '虹のオパール', '見る角度ごとに、違う季節の色になる。'],
+      ['dragonheart', 'SSR', '竜の心臓石', '今もかすかに脈打つ、伝説の紅い石。'],
+    ] },
+    { id: 'sweets', name: '魔女のお菓子', items: [
+      ['starcookie', 'N', '星くずクッキー', 'かじるとパチパチ星がはじける。'],
+      ['marshmallow', 'N', '魔法のマシュマロ', '浮かべるとココアがふわりと宙に浮く。'],
+      ['pumpkintart', 'N', 'かぼちゃのタルト', '収穫祭の定番。笑う顔が描いてある。'],
+      ['herbcandy', 'N', 'ハーブの飴', '喉に効く、ミントとカモミールの飴。'],
+      ['dango', 'R', '月見だんご', '月に供えると、次の日ひとつ増えている。'],
+      ['rosemacaron', 'R', '薔薇のマカロン', '香りだけで、恋の悩みが軽くなる。'],
+      ['berrypie', 'R', '森のベリーパイ', '森の妖精がこっそり分けてくれたベリー入り。'],
+      ['starparfait', 'SR', '星降るパフェ', '一番上の星を食べると、願いがひとつ叶う。'],
+      ['nightcake', 'SR', '夜空のケーキ', '切るたびに、断面に違う星座が現れる。'],
+      ['goldpudding', 'SSR', '女王の金色プリン', '大魔女の誕生日にだけ作られる、幻のプリン。'],
+    ] },
+    { id: 'charms', name: '星と月のお守り', items: [
+      ['mooncharm', 'N', '三日月のチャーム', 'カバンに付けると、忘れ物が減る。'],
+      ['starbell', 'N', '星の鈴', '振ると、遠くの友だちに音が届く。'],
+      ['cloverbookmark', 'N', '四つ葉の栞', '開いたページに、いい知らせが挟まっている。'],
+      ['wishstring', 'N', '願いの組紐', '切れたときに、願いが叶うといわれる。'],
+      ['meteorbrooch', 'R', '流れ星のブローチ', '胸元で、ときどき小さく流れ星が光る。'],
+      ['phasewatch', 'R', '月齢の懐中時計', '時刻の代わりに、月の満ち欠けを指す。'],
+      ['starcompass', 'R', '星座のコンパス', '北ではなく、会いたい人の方角を指す。'],
+      ['snowglobe', 'SR', '銀河のスノードーム', '振ると、中で小さな銀河がゆっくり回る。'],
+      ['sunmoonpendant', 'SR', '太陽と月のペンダント', '昼と夜で、表と裏の絵が入れ替わる。'],
+      ['starcrown', 'SSR', '星の王冠', '夜空でいちばん明るい星を集めて作った王冠。'],
+    ] },
+  ];
+  const GACHA = {
+    cost1: 50, cost10: 500, exchangePoints: 100,
+    rarities: [
+      { id: 'N', rate: 0.60, refund: 10, color: '#b8c4d6', label: 'N' },
+      { id: 'R', rate: 0.28, refund: 50, color: '#5ab0ff', label: 'R' },
+      { id: 'SR', rate: 0.10, refund: 80, color: '#f2c44f', label: 'SR' },
+      { id: 'SSR', rate: 0.02, refund: 100, color: '#ff7ad9', label: 'SSR' },
+    ],
+    genres: GACHA_GENRES,
+    items: [],
+  };
+  GACHA_GENRES.forEach((g, gi) => g.items.forEach(([id, rarity, name, desc], k) => GACHA.items.push({ id, rarity, name, desc, genre: g.id, gi, k })));
+
+  root.GameData = { GACHA, COLORS, SERIES, VARIANTS, BOTTLES, TROPHY_MOTIFS, TROPHY_COLORS, CONFIG, ITEMS, ACH, ACH_REWARD, RULE_CARDS };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

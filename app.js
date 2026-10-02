@@ -117,6 +117,7 @@
     window.scrollTo(0, 0);
   }
   App.show = show;
+  App.reduceMotion = () => !!B.reduce;
   function musicFor(id) {
     const g = App.game;
     if (id === 'game') return g && g.lv && (g.lv.k.includes('giant') || g.daily) ? 'mystic' : 'home';
@@ -241,6 +242,7 @@
     shop: () => { renderShop(); show('shop'); ruleCard('shop'); },
     collection: () => { renderCollection(); show('collection'); },
     achievements: () => { renderAchievements(); show('achievements'); },
+    gacha: () => { root.Gacha.open(); ruleCard('gacha'); },
     settings: () => openSettings(false),
   };
 
@@ -963,7 +965,13 @@
   }
 
   // ---------------- collection ----------------
+  let collTab = 'bottles';
   function renderCollection() {
+    $$('[data-ctab]').forEach((t) => t.setAttribute('aria-selected', t.dataset.ctab === collTab ? 'true' : 'false'));
+    $('#shelves').hidden = collTab !== 'bottles';
+    $('#coll-top').hidden = collTab !== 'bottles';
+    $('#ga-shelves').hidden = collTab !== 'gacha';
+    if (collTab === 'gacha') { root.Gacha.renderCollection($('#ga-shelves')); return; }
     const box = $('#shelves');
     box.textContent = '';
     const unlocked = maxUnlocked();
@@ -1178,6 +1186,9 @@
       case 'tables': return S.counter('tables');
       case 'chimneys': return S.counter('chimneys');
       case 'cauldron': return S.best('cauldron');
+      case 'gachaOwn': return root.Gacha ? root.Gacha.ownedCount() : 0;
+      case 'gachaPulls': return root.Gacha ? root.Gacha.pulls() : 0;
+      case 'gachaSSR': return root.Gacha ? root.Gacha.ssrCount() : 0;
       default: return 0;
     }
   }
@@ -1378,6 +1389,8 @@
     on('#m-shop', menu.shop);
     on('#m-collection', menu.collection);
     on('#m-achievements', menu.achievements);
+    on('#m-gacha', menu.gacha);
+    $$('[data-ctab]').forEach((t) => t.addEventListener('click', () => { collTab = t.dataset.ctab; renderCollection(); }));
     on('#m-settings', menu.settings);
     $$('[data-home]').forEach((b) => b.addEventListener('click', () => { Snd.play('tap'); renderTitle(); show('title'); }));
     on('#lv-prev', () => { levelPage--; renderLevels(); });

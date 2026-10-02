@@ -332,6 +332,58 @@ img { max-width: 100%; }
 .detail-nav { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
 @media (max-aspect-ratio: 1/1) { .detail-main { flex-direction: column; } .detail-info { flex: none; } }
 
+/* ---------- gacha ---------- */
+.ga-body { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding-bottom: calc(12px + var(--safe-b)); }
+.ga-machine { position: relative; width: min(56vw, 34vh, 260px); aspect-ratio: 1 / 1.25; }
+.ga-orb { position: absolute; left: 8%; right: 8%; top: 0; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff 0, #d9c8ff 12%, #7a52d6 45%, #2a1458 80%); box-shadow: 0 0 40px rgba(170, 130, 255, .7), inset 0 -12px 30px rgba(0, 0, 0, .4); animation: orbglow 3s ease-in-out infinite; }
+.ga-stand { position: absolute; left: 22%; right: 22%; bottom: 0; height: 26%; border-radius: 40% 40% 10px 10px; background: linear-gradient(180deg, #f3d48a, #b07a2f 60%, #6d4518); box-shadow: 0 8px 20px rgba(0, 0, 0, .5); }
+@keyframes orbglow { 50% { box-shadow: 0 0 70px rgba(200, 160, 255, .95), inset 0 -12px 30px rgba(0, 0, 0, .4); } }
+.ga-info { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 16px; font-variant-numeric: tabular-nums; }
+.ga-pt { display: inline-flex; align-items: center; gap: 6px; }
+.ga-row { display: flex; gap: 8px; }
+.ga-actions { display: flex; gap: 12px; }
+.ga-buy { flex-direction: column; gap: 0; min-width: 130px; min-height: 60px; font-size: 18px; line-height: 1.2; }
+.ga-buy span:last-child { font-size: 14px; display: inline-flex; align-items: center; gap: 4px; }
+.ga-note { margin: 0; font-size: 12px; color: var(--muted); text-align: center; }
+.ga-rate-panel { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 8; width: min(92%, 380px); box-sizing: border-box; padding: 14px; border-radius: var(--r); background: rgba(24, 12, 48, .96); border: 1px solid var(--gold); display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.ga-rate-panel table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+.ga-rate-panel th, .ga-rate-panel td { padding: 4px 6px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, .1); }
+.ga-rate-panel p { margin: 0; font-size: 12px; color: var(--muted); }
+.ga-rbadge { display: inline-block; min-width: 30px; padding: 0 6px; border-radius: 6px; background: var(--rc, #888); color: #1a0d2b; font-weight: 700; font-size: 12px; line-height: 18px; text-align: center; font-family: var(--font-display); }
+.ga-rbadge.big { font-size: 22px; line-height: 32px; padding: 0 14px; }
+.ga-rbadge.small { position: absolute; top: 2px; left: 2px; min-width: 0; font-size: 9px; line-height: 13px; padding: 0 4px; }
+.ga-art { position: relative; display: grid; place-items: center; width: 100%; aspect-ratio: 1; }
+.ga-art .ga-ph { display: grid; place-items: center; width: 72%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff 0, var(--rc) 40%, rgba(20, 10, 40, .8) 100%); color: rgba(255, 255, 255, .9); font-size: clamp(14px, 4vw, 30px); box-shadow: 0 0 16px var(--rc); }
+.ga-art.big { width: min(56vw, 220px); }
+.ga-art.big .ga-ph { font-size: 64px; }
+.ga-img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0 10px var(--rc)); }
+#ga-show { position: fixed; inset: 0; z-index: 35; background: radial-gradient(ellipse at 50% 40%, rgba(60, 30, 110, .96), rgba(6, 2, 16, .98)); display: grid; place-items: center; cursor: pointer; }
+#ga-show[hidden] { display: none !important; }
+#ga-cv { position: absolute; inset: 0; width: 100%; height: 100%; }
+#ga-card { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; width: min(86vw, 340px); box-sizing: border-box; padding: 18px; border-radius: 20px; background: linear-gradient(180deg, rgba(40, 20, 80, .92), rgba(20, 8, 40, .95)); border: 3px solid var(--rc); box-shadow: 0 0 40px var(--rc); animation: cardin .45s cubic-bezier(.2, 1.4, .5, 1); text-align: center; }
+#ga-card.r-SSR { box-shadow: 0 0 30px #ff7ad9, 0 0 60px #7bf2ff; }
+@keyframes cardin { from { transform: scale(.5) rotate(-8deg); opacity: 0; } }
+.ga-name { font-family: var(--font-display); font-size: 22px; color: var(--gold-hi); margin: 0; }
+.ga-new { color: #8cffb0; font-weight: 700; font-family: var(--font-display); }
+.ga-dup { color: var(--muted); font-size: 13px; }
+.ga-desc { font-size: 13px; color: var(--text); }
+.ga-count { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+#ga-grid { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; width: min(94vw, 600px); }
+.ga-cell { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px; border-radius: 12px; background: rgba(30, 14, 60, .9); border: 2px solid var(--rc); box-shadow: 0 0 12px var(--rc); animation: cardin .35s both; text-align: center; min-width: 0; }
+.ga-cname { font-size: 11px; line-height: 1.2; }
+.ga-cell .ga-new, .ga-cell .ga-dup { font-size: 11px; }
+#ga-tap { position: absolute; bottom: calc(24px + var(--safe-b)); left: 0; right: 0; text-align: center; color: var(--muted); font-size: 13px; z-index: 1; }
+#ga-skip { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 12px); right: 12px; z-index: 2; }
+.ga-ex { display: flex; flex-direction: column; gap: 8px; }
+.ga-ex-btn { justify-content: space-between; }
+.ga-coll-head { text-align: center; font-family: var(--font-display); padding-bottom: 6px; }
+.ga-shelf .slots { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.ga-slot { aspect-ratio: 1; border: 2px solid var(--rc) !important; }
+.ga-slot:not(.got) { border-style: dashed !important; opacity: .85; }
+.ga-detail { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+.ga-detail .ga-name { color: #4b2a1a; }
+#ga-shelves { display: flex; flex-direction: column; gap: 14px; width: min(100%, 760px); margin: 0 auto; }
+
 /* ---------- achievements ---------- */
 #ach-list { display: flex; flex-direction: column; gap: 8px; width: min(100%, 640px); margin: 0 auto; }
 .ach { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--r); background: var(--glass); border: 1px solid rgba(239, 201, 120, .3); }
@@ -427,7 +479,8 @@ img { max-width: 100%; }
       <button class="btn" id="m-shop">ショップ</button>
       <button class="btn" id="m-collection">ポーション図鑑</button>
       <button class="btn" id="m-achievements">実績<span class="dot" data-ach-dot hidden></span></button>
-      <button class="btn" id="m-settings" style="grid-column: 1 / -1">設定</button>
+      <button class="btn" id="m-gacha">星の福引き</button>
+      <button class="btn" id="m-settings">設定</button>
     </nav>
   </section>
 
@@ -477,8 +530,9 @@ img { max-width: 100%; }
   <!-- collection -->
   <section class="screen" id="collection" hidden>
     <header class="bar"><button class="back-btn" data-home aria-label="タイトルへ">‹</button><h2 class="grow">ポーション図鑑</h2><span class="chip"><img class="coin-ic" src="assets/coin.webp" alt="コイン"><span data-coins>0</span></span></header>
-    <div class="coll-top"><span id="coll-total">0 / 100</span><span class="gauge wide"><i id="coll-bar" style="width:0"></i></span><span id="coll-complete" hidden>コンプリート</span></div>
-    <div class="scroll"><div id="shelves"></div></div>
+    <div class="tabs" role="tablist"><button class="tab" role="tab" data-ctab="bottles" aria-selected="true">魔法瓶</button><button class="tab" role="tab" data-ctab="gacha" aria-selected="false">福引きの小物</button></div>
+    <div class="coll-top" id="coll-top"><span id="coll-total">0 / 100</span><span class="gauge wide"><i id="coll-bar" style="width:0"></i></span><span id="coll-complete" hidden>コンプリート</span></div>
+    <div class="scroll"><div id="shelves"></div><div id="ga-shelves" hidden></div></div>
   </section>
   <div id="detail" hidden>
     <header class="bar"><button class="back-btn" id="detail-close" aria-label="図鑑に戻る">‹</button><h2 class="grow" id="detail-name"></h2></header>
@@ -520,6 +574,47 @@ img { max-width: 100%; }
     </div>
   </section>
 
+  <!-- gacha -->
+  <section class="screen" id="gacha" hidden>
+    <header class="bar"><button class="back-btn" data-home aria-label="タイトルへ">‹</button><h2 class="grow">星の福引き</h2><span class="chip"><img class="coin-ic" src="assets/coin.webp" alt="コイン"><span data-coins>0</span></span></header>
+    <div class="ga-body">
+      <div class="ga-machine" aria-hidden="true"><div class="ga-orb"></div><div class="ga-stand"></div></div>
+      <div class="ga-info">
+        <span>集めた小物 <b id="ga-own">0</b> / 50</span>
+        <span class="ga-pt">ポイント <b id="ga-pts">0</b> / 100 <span class="gauge"><i id="ga-ptbar" style="width:0"></i></span></span>
+      </div>
+      <div class="ga-row">
+        <button class="btn small" id="ga-exchange">ポイント交換</button>
+        <button class="btn small" id="ga-rates">排出率</button>
+      </div>
+      <div class="ga-actions">
+        <button class="btn primary ga-buy" id="ga-1"><span>1回</span><span><img class="coin-ic" src="assets/coin.webp" alt="">50</span></button>
+        <button class="btn primary ga-buy" id="ga-10"><span>10連</span><span><img class="coin-ic" src="assets/coin.webp" alt="">500</span></button>
+      </div>
+      <p class="ga-note">10連はR以上が1つ確定 · 1回ごとに1ポイント · 持っている物はコインに戻ります</p>
+    </div>
+    <div id="ga-rate-panel" class="ga-rate-panel" hidden>
+      <table>
+        <thead><tr><th>レアリティ</th><th>排出率</th><th>種類</th><th>被ったとき</th></tr></thead>
+        <tbody>
+          <tr><td><span class="ga-rbadge" style="--rc:#ff7ad9">SSR</span></td><td>2%</td><td>5</td><td>100コイン</td></tr>
+          <tr><td><span class="ga-rbadge" style="--rc:#f2c44f">SR</span></td><td>10%</td><td>10</td><td>80コイン</td></tr>
+          <tr><td><span class="ga-rbadge" style="--rc:#5ab0ff">R</span></td><td>28%</td><td>15</td><td>50コイン</td></tr>
+          <tr><td><span class="ga-rbadge" style="--rc:#b8c4d6">N</span></td><td>60%</td><td>20</td><td>10コイン</td></tr>
+        </tbody>
+      </table>
+      <p>同じレアリティの中のアイテムは、どれも同じ確率で出ます。10連で1〜9回目がすべてNのときは、10回目がR以上になります。</p>
+      <button class="btn small" id="ga-rate-close">閉じる</button>
+    </div>
+    <div id="ga-show" hidden>
+      <canvas id="ga-cv"></canvas>
+      <div id="ga-card" hidden></div>
+      <div id="ga-grid" hidden></div>
+      <div id="ga-tap" hidden></div>
+      <button class="btn small" id="ga-skip" hidden>スキップ</button>
+    </div>
+  </section>
+
   <!-- mini game menu -->
   <section class="screen" id="minis" hidden>
     <header class="bar"><button class="back-btn" data-home aria-label="タイトルへ">‹</button><h2 class="grow">ミニゲーム</h2><span class="chip"><img class="coin-ic" src="assets/coin.webp" alt="コイン"><span data-coins>0</span></span></header>
@@ -540,14 +635,15 @@ img { max-width: 100%; }
   <div id="toasts"></div>
 </div>
 
-<script src="engine.js?v=20261003012843" charset="utf-8"></script>
-<script src="data.js?v=20261003012843" charset="utf-8"></script>
-<script src="render.js?v=20261003012843" charset="utf-8"></script>
-<script src="audio.js?v=20261003012843" charset="utf-8"></script>
-<script src="store.js?v=20261003012843" charset="utf-8"></script>
-<script src="game.js?v=20261003012843" charset="utf-8"></script>
-<script src="mini.js?v=20261003012843" charset="utf-8"></script>
-<script src="app.js?v=20261003012843" charset="utf-8"></script>
+<script src="engine.js?v=20261003020154" charset="utf-8"></script>
+<script src="data.js?v=20261003020154" charset="utf-8"></script>
+<script src="render.js?v=20261003020154" charset="utf-8"></script>
+<script src="audio.js?v=20261003020154" charset="utf-8"></script>
+<script src="store.js?v=20261003020154" charset="utf-8"></script>
+<script src="game.js?v=20261003020154" charset="utf-8"></script>
+<script src="mini.js?v=20261003020154" charset="utf-8"></script>
+<script src="gacha.js?v=20261003020154" charset="utf-8"></script>
+<script src="app.js?v=20261003020154" charset="utf-8"></script>
 <script>
   (function () {
     // iPhone / iPad home-screen app only (navigator.standalone exists only there)

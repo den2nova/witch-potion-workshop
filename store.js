@@ -32,6 +32,7 @@
       achClaimed: {},
       seriesClaimed: {},
       completeClaimed: 0,
+      gacha: { owned: {}, pulls: 0, points: 0 },
       title: null,
       cosmetics: { owned: ['flask', 'workshop'], bottle: 'flask', bg: 'workshop' },
       login: { last: null, day: 0 },
