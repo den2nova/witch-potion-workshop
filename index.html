@@ -153,7 +153,7 @@ img { max-width: 100%; }
 .mini-star { width: 17px; height: 17px; object-fit: contain; }
 .lvl-lock { font-size: 14px; opacity: .8; position: relative; z-index: 1; }
 .lvl-giant { position: absolute; inset: 6% 18%; width: 64%; height: 88%; object-fit: contain; opacity: .9; }
-.lvl-giant.sil { filter: brightness(0) drop-shadow(0 0 3px rgba(190, 150, 255, .7)); opacity: .55; }
+.lvl-giant-q { position: absolute; left: 22%; top: 10%; width: 56%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 40% 35%, rgba(150, 110, 220, .35), rgba(30, 15, 55, .6)); border: 1px dashed rgba(200, 170, 255, .4); }
 .lvl-kind { position: absolute; top: 4px; right: 6px; font-size: 11px; font-weight: 700; color: var(--mint); z-index: 1; }
 .pager { display: flex; align-items: center; gap: 12px; }
 .pager .label { min-width: 90px; text-align: center; font-family: var(--font-display); font-variant-numeric: tabular-nums; }
@@ -525,7 +525,7 @@ img { max-width: 100%; }
     <header class="bar"><button class="back-btn" data-home aria-label="タイトルへ">‹</button><h2 class="grow">ミニゲーム</h2><span class="chip"><img class="coin-ic" src="assets/coin.webp" alt="コイン"><span data-coins>0</span></span></header>
     <div class="scroll">
       <div class="mini-cards">
-        <button class="mini-card" data-mini="clean"><img src="assets/clean_cloth.webp" alt=""><h3>お掃除</h3><p>こぼれたポーションをクロスで拭くだけ。机1台ごとにコイン2枚。</p><span class="best" data-best="tables"></span></button>
+        <button class="mini-card" data-mini="clean"><img src="assets/clean_cloth.webp" alt=""><h3>お掃除</h3><p>こぼれたポーションをクロスで拭くだけ。机1台ごとにコイン5枚。</p><span class="best" data-best="tables"></span></button>
         <button class="mini-card" data-mini="cauldron"><img src="assets/mini_cauldron_sprites_7.webp" alt=""><h3>大釜キャッチ</h3><p>左右に動かして、指定の色の材料だけを大釜で受けます。カエルと毒キノコは避けて。45秒。</p><span class="best" data-best="cauldron"></span></button>
         <button class="mini-card" data-mini="broom"><img src="assets/mini_broom_sprites_0.webp" alt=""><h3>ほうきの夜間飛行</h3><p>タップで上昇。煙突とコウモリの間を抜けて、星を集めます。</p><span class="best" data-best="broom"></span></button>
       </div>
@@ -540,14 +540,14 @@ img { max-width: 100%; }
   <div id="toasts"></div>
 </div>
 
-<script src="engine.js?v=20261002221550" charset="utf-8"></script>
-<script src="data.js?v=20261002221550" charset="utf-8"></script>
-<script src="render.js?v=20261002221550" charset="utf-8"></script>
-<script src="audio.js?v=20261002221550" charset="utf-8"></script>
-<script src="store.js?v=20261002221550" charset="utf-8"></script>
-<script src="game.js?v=20261002221550" charset="utf-8"></script>
-<script src="mini.js?v=20261002221550" charset="utf-8"></script>
-<script src="app.js?v=20261002221550" charset="utf-8"></script>
+<script src="engine.js?v=20261002222214" charset="utf-8"></script>
+<script src="data.js?v=20261002222214" charset="utf-8"></script>
+<script src="render.js?v=20261002222214" charset="utf-8"></script>
+<script src="audio.js?v=20261002222214" charset="utf-8"></script>
+<script src="store.js?v=20261002222214" charset="utf-8"></script>
+<script src="game.js?v=20261002222214" charset="utf-8"></script>
+<script src="mini.js?v=20261002222214" charset="utf-8"></script>
+<script src="app.js?v=20261002222214" charset="utf-8"></script>
 <script>
   (function () {
     // iPhone / iPad home-screen app only (navigator.standalone exists only there)

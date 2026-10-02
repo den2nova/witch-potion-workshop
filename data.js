@@ -104,7 +104,7 @@
     ],
     COIN: {
       clearBase: 10, perStar: 5, giantBonus: 30, replay: 5, starUp: 5,
-      cleanTable: 2, dailyClear: 20, trophyFull: 200, seriesDone: 150, collectionDone: 1000,
+      cleanTable: 5, dailyClear: 20, trophyFull: 200, seriesDone: 150, collectionDone: 1000,
     },
     LOGIN_BONUS: [
       { coins: 10 }, { coins: 10 }, { coins: 15 }, { undo: 1 }, { coins: 20 }, { coins: 20 }, { coins: 50, shuffle: 1 },
@@ -145,7 +145,7 @@
     'giant+blind': { title: '巨大ボトル × ブラインド', body: '霧に隠れた層を掘り出しながら、魔法瓶と同じ色を集めて満杯にしましょう。' },
     'blind+curtain': { title: 'ブラインド × カーテン', body: 'カーテンが開くと、その瓶の一番上の色だけが見えるようになります。' },
     shop: { title: '魔女の道具屋', body: 'パズルやミニゲームで貯めたコインで、アイテムや着せ替えを買えます。' },
-    minigame: { title: 'ミニゲーム', body: '気分転換に遊んでコインを稼げます。何度でも遊べて、失敗しても最低5枚もらえます。' },
+    minigame: { title: 'ミニゲーム', body: '気分転換に遊んでコインを稼げます。何度でも遊べて、失敗しても最低10枚もらえます。' },
     daily: { title: 'デイリーチャレンジ', body: '1日1問。クリアするとその月のトロフィーにポーションが注がれ、1か月分そろうと満杯になります。' },
     cosmetics: { title: '着せ替え', body: '瓶と背景のデザインを変えられます。買う前にプレビューできます。' },
   };

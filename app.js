@@ -365,8 +365,9 @@
       });
       if (giant) {
         const gi = giantInfo(giantIndex(n));
-        const im = img('giant_' + gi.s + '_back', 'lvl-giant' + (rec ? '' : ' sil'));
-        cell.append(im);
+        // the bottle is shown only after it has been filled; before that its shape stays a secret
+        if (rec) cell.append(img('giant_' + gi.s + '_back', 'lvl-giant'));
+        else cell.append(h('span', { class: 'lvl-giant-q', 'aria-hidden': 'true' }));
       }
       cell.append(h('span', { class: 'lvl-n', text: n }));
       if (locked) cell.append(h('span', { class: 'lvl-lock', 'aria-hidden': 'true', text: '🔒︎' }));
