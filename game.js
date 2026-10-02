@@ -289,7 +289,7 @@
         glow: selected ? 1 : guideHi ? 0.6 + 0.4 * Math.sin(t / 200) : 0,
         glowColor: guideHi ? 'rgba(140,255,230,0.95)' : undefined,
         shine: Board.revealShine(i, t),
-        inner: complete && !s.giant ? (c) => drawCork(c, i, rect, v) : null,
+        inner: complete && !s.giant && !Board.noCork ? (c) => drawCork(c, i, rect, v) : null,
       });
     }
     if (locked || ca) drawCurtain(ctx, i, rect, b, t);

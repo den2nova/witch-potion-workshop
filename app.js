@@ -125,7 +125,7 @@
 
   function updateChrome() {
     $$('[data-coins]').forEach((el) => { el.textContent = S.coins().toLocaleString('ja-JP'); });
-    const bg = GD.CONFIG.COSMETICS.find((c) => c.id === S.p.cosmetics.bg) || GD.CONFIG.COSMETICS[5];
+    const bg = GD.CONFIG.COSMETICS.find((c) => c.id === S.p.cosmetics.bg) || GD.CONFIG.COSMETICS.find((c) => c.id === 'workshop');
     const root2 = document.documentElement;
     let bgName = bg.img;
     if (App.screen === 'shop') bgName = 'shop_bg';
@@ -410,6 +410,9 @@
     $('#g-loading').hidden = false;
     const vkey = currentVesselKey();
     let vessel = await R.loadVessel(vkey);
+    // bottles drawn with their own stopper get no extra cork when finished
+    const cos = C.COSMETICS.find((x) => x.img === vkey);
+    B.noCork = !!(cos && cos.stopper);
     if (!vessel) vessel = (await R.loadVessel('bottle')) || R.fallbackVessel();
     let giant = null;
     if (lv.g) {
