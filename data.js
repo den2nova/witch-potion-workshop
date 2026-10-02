@@ -85,10 +85,10 @@
     ITEM_MAX: 99,
     COIN_MAX: 9999,
     PRICES: [
-      { id: 'undo1', item: 'undo', qty: 1, price: 30 },
-      { id: 'undo5', item: 'undo', qty: 5, price: 120 },
-      { id: 'shuffle1', item: 'shuffle', qty: 1, price: 60 },
-      { id: 'bottle1', item: 'bottle', qty: 1, price: 80 },
+      { id: 'undo1', item: 'undo', qty: 1, price: 100 },
+      { id: 'undo5', item: 'undo', qty: 5, price: 450 },
+      { id: 'shuffle1', item: 'shuffle', qty: 1, price: 150 },
+      { id: 'bottle1', item: 'bottle', qty: 1, price: 200 },
     ],
     COSMETICS: [
       { id: 'flask', type: 'bottle', name: '標準の薬瓶', price: 0, img: 'bottle' },
@@ -144,8 +144,8 @@
     curtain: { title: 'カーテン', body: 'カーテンの掛かった瓶は触れません。裾の札に書かれた条件(指定の色、または本数)の瓶を完成させると開きます。' },
     'giant+blind': { title: '巨大ボトル × ブラインド', body: '霧に隠れた層を掘り出しながら、魔法瓶と同じ色を集めて満杯にしましょう。' },
     'blind+curtain': { title: 'ブラインド × カーテン', body: 'カーテンが開くと、その瓶の一番上の色だけが見えるようになります。' },
-    shop: { title: '魔女の道具屋', body: 'パズルやミニゲームで貯めた金貨で、アイテムや着せ替えを買えます。' },
-    minigame: { title: 'ミニゲーム', body: '気分転換に遊んで金貨を稼げます。何度でも遊べて、失敗しても最低5枚もらえます。' },
+    shop: { title: '魔女の道具屋', body: 'パズルやミニゲームで貯めたコインで、アイテムや着せ替えを買えます。' },
+    minigame: { title: 'ミニゲーム', body: '気分転換に遊んでコインを稼げます。何度でも遊べて、失敗しても最低5枚もらえます。' },
     daily: { title: 'デイリーチャレンジ', body: '1日1問。クリアするとその月のトロフィーにポーションが注がれ、1か月分そろうと満杯になります。' },
     cosmetics: { title: '着せ替え', body: '瓶と背景のデザインを変えられます。買う前にプレビューできます。' },
   };

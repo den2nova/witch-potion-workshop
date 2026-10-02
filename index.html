@@ -195,8 +195,10 @@ img { max-width: 100%; }
 #hand .finger { font-size: 38px; animation: poke .9s ease-in-out infinite; filter: drop-shadow(0 3px 6px #000); }
 #hand span { margin-top: 2px; padding: 3px 10px; border-radius: 10px; background: rgba(20, 60, 60, .85); color: var(--mint); font-size: 13px; font-weight: 700; white-space: nowrap; }
 @keyframes poke { 50% { transform: translateY(-10px); } }
-#hint { position: absolute; left: 50%; top: 2px; transform: translateX(-50%); z-index: 5; width: min(92%, 460px); padding: 6px 12px; font-size: 13px !important; border-radius: 14px; background: rgba(18, 40, 46, .92); border: 1px solid rgba(140, 255, 230, .5); color: var(--text); font-size: 14px; text-align: center; }
-#skip-tut { position: absolute; right: 6px; top: 6px; z-index: 6; }
+#hint { position: absolute; left: 8px; right: 8px; top: 2px; margin: 0 auto; z-index: 5; max-width: 460px; padding: 6px 12px; border-radius: 14px; background: rgba(18, 40, 46, .92); border: 1px solid rgba(140, 255, 230, .5); color: var(--text); font-size: 13px; text-align: center; }
+/* during a tutorial the skip button sits beside the hint, never on top of its text */
+#skip-tut:not([hidden]) ~ #hint { right: 104px; margin: 0; }
+#skip-tut { position: absolute; right: 8px; top: 2px; z-index: 6; }
 #kcursor { position: absolute; z-index: 4; height: 4px; border-radius: 4px; background: var(--mint); box-shadow: 0 0 10px var(--mint); pointer-events: none; }
 
 /* ---------- panels / dialogs ---------- */
@@ -308,7 +310,7 @@ img { max-width: 100%; }
 .slot.got { background: radial-gradient(ellipse at 50% 80%, rgba(255, 220, 150, .18), transparent 70%); }
 .slot-img, .slot-cv { width: 100%; height: 100%; object-fit: contain; }
 .slot-img.sil { filter: brightness(0) drop-shadow(0 0 2px rgba(190, 150, 255, .6)); opacity: .7; }
-.slot-q { position: absolute; bottom: 4px; font-size: 11px; color: var(--muted); }
+.slot-hidden { display: grid; place-items: center; width: 70%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 40% 35%, rgba(120, 90, 180, .35), rgba(20, 10, 35, .7)); border: 1px dashed rgba(200, 170, 255, .35); font-family: var(--font-display); font-size: clamp(16px, 4vw, 26px); color: rgba(220, 200, 255, .55); }
 .slot-cap { position: absolute; bottom: -2px; left: 0; right: 0; font-size: 10px; text-align: center; color: var(--parch); line-height: 1.2; }
 .shelf.trophies .slots { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 @media (min-width: 640px) { .shelf.trophies .slots { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
@@ -351,21 +353,28 @@ img { max-width: 100%; }
 .title-pick select { min-height: 38px; border-radius: 10px; background: var(--dusk); color: var(--text); border: 1px solid var(--copper); padding: 0 8px; font: inherit; }
 
 /* ---------- daily ---------- */
-#daily .body { flex: 1; min-height: 0; overflow-y: auto; display: flex; gap: 18px; justify-content: center; align-items: flex-start; flex-wrap: wrap; padding-bottom: 14px; }
-.cal { width: min(100%, 420px); padding: 12px; border-radius: var(--r); background: var(--glass); border: 1px solid rgba(239, 201, 120, .35); }
-.cal-head { display: flex; align-items: center; justify-content: space-between; padding-bottom: 8px; }
-.cal-head h3 { font-size: 20px; }
+/* daily: trophy on top, calendar in the middle, play button under it; fits one screen */
+.daily-body { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; padding-bottom: calc(8px + var(--safe-b)); overflow: hidden; }
+.trophy-row { display: flex; align-items: center; gap: 12px; flex: none; }
+#d-trophy { width: auto; height: clamp(84px, 17vh, 160px); aspect-ratio: 2 / 3; }
+.trophy-text { display: flex; flex-direction: column; gap: 2px; }
+#d-trophy-label { font-family: var(--font-display); font-size: 17px; }
+#d-trophy-sub { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.cal { width: min(100%, 420px); padding: 8px 10px 10px; border-radius: var(--r); background: var(--glass); border: 1px solid rgba(239, 201, 120, .35); flex: none; }
+.cal-head { display: flex; align-items: center; justify-content: space-between; padding-bottom: 6px; }
+.cal-head h3 { font-size: 19px; }
 #d-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
 .dow { text-align: center; font-size: 12px; color: var(--muted); }
-.dday { position: relative; aspect-ratio: 1; border-radius: 10px; border: 1px solid rgba(255, 255, 255, .12); background: rgba(255, 255, 255, .05); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0; font-variant-numeric: tabular-nums; }
+.dday { position: relative; height: clamp(30px, 5.4vh, 50px); border-radius: 10px; border: 1px solid rgba(255, 255, 255, .12); background: rgba(255, 255, 255, .05); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0; font-variant-numeric: tabular-nums; }
+.dday.sel { background: rgba(140, 255, 230, .18); border: 2px solid var(--mint); }
+.d-actions { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: none; }
+#d-selected { font-size: 13px; color: var(--muted); }
+#d-play { min-width: 220px; }
 .dday.today { border: 2px solid var(--gold); box-shadow: 0 0 10px rgba(239, 201, 120, .6); }
 .dday.locked { opacity: .4; cursor: default; }
 .dday .dnum { font-size: 14px; line-height: 1; }
 .drop { width: 12px; height: 15px; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; margin-top: 2px; box-shadow: 0 0 6px rgba(255, 255, 255, .4); clip-path: path("M6 0 C 11 6, 12 9, 12 10 A 6 5 0 0 1 0 10 C 0 9, 1 6, 6 0 Z"); }
 .dlock { font-size: 10px; }
-.trophy-box { display: flex; flex-direction: column; align-items: center; gap: 6px; width: min(100%, 240px); }
-#d-trophy { width: 180px; height: 270px; }
-#d-trophy-label { font-family: var(--font-display); text-align: center; }
 
 /* ---------- mini games ---------- */
 .mini-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; width: min(100%, 760px); margin: 0 auto; }
@@ -380,6 +389,7 @@ img { max-width: 100%; }
 .mini-wrap { position: relative; flex: 1; min-height: 0; }
 #mini-cv { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: none; }
 #mini-loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); }
+#mini-next { position: absolute; left: 50%; bottom: calc(10px + var(--safe-b)); transform: translateX(-50%); z-index: 2; }
 
 .reduce *, .reduce *::before, .reduce *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; } }
@@ -403,7 +413,7 @@ img { max-width: 100%; }
   <!-- title -->
   <section class="screen" id="title" hidden>
     <canvas id="demo" aria-hidden="true"></canvas>
-    <div class="top-right"><span class="chip"><img class="coin-ic" src="assets/coin.webp" alt="金貨"><span data-coins>0</span></span></div>
+    <div class="top-right"><span class="chip"><img class="coin-ic" src="assets/coin.webp" alt="コイン"><span data-coins>0</span></span></div>
     <div class="brand">
       <img class="logo" src="assets/title_logo.webp" alt="">
       <h1 class="game-name">魔女のポーション工房</h1>
@@ -424,7 +434,7 @@ img { max-width: 100%; }
 
   <!-- level select -->
   <section class="screen" id="levels" hidden>
-    <header class="bar"><button class="back-btn" data-home aria-label="タイトルへ">‹</button><h2 class="grow">レベル選択</h2><span class="chip"><img class="coin-ic" src="assets/coin.webp" alt="金貨"><span data-coins>0</span></span></header>
+    <header class="bar"><button class="back-btn" data-home aria-label="タイトルへ">‹</button><h2 class="grow">レベル選択</h2><span class="chip"><img class="coin-ic" src="assets/coin.webp" alt="コイン"><span data-coins>0</span></span></header>
     <div class="body">
       <div class="pager"><button class="btn small" id="lv-prev" aria-label="前のページ">‹</button><span class="label" id="lv-page"></span><button class="btn small" id="lv-next" aria-label="次のページ">›</button></div>
       <div id="level-grid"></div>
@@ -438,7 +448,7 @@ img { max-width: 100%; }
       <button class="back-btn" id="g-back" aria-label="メインメニューへ">‹</button>
       <div class="lvl-title grow"><strong id="g-level">レベル 1</strong><span id="g-kinds"></span></div>
       <div class="moves"><b id="g-moves">0</b><small>手数 · 目安 <span id="g-par">0</span></small></div>
-      <span class="chip"><img class="coin-ic" src="assets/coin.webp" alt="金貨"><span data-coins>0</span></span>
+      <span class="chip"><img class="coin-ic" src="assets/coin.webp" alt="コイン"><span data-coins>0</span></span>
       <button class="icon-btn" id="g-settings" aria-label="設定"><img src="assets/ui_buttons_4.webp" alt=""></button>
     </header>
     <div id="board-wrap">
@@ -446,8 +456,8 @@ img { max-width: 100%; }
       <div id="g-loading" hidden>瓶を並べています…</div>
       <div id="g-busy" hidden>杖で混ぜています…</div>
       <div id="hand" hidden><div class="finger" aria-hidden="true">☝︎</div><span></span></div>
-      <div id="hint" hidden></div>
       <button class="btn small" id="skip-tut" hidden>スキップ</button>
+      <div id="hint" hidden></div>
       <div id="kcursor" hidden></div>
     </div>
     <nav class="toolbar" aria-label="アイテム">
@@ -460,14 +470,14 @@ img { max-width: 100%; }
 
   <!-- shop -->
   <section class="screen" id="shop" hidden>
-    <header class="bar"><button class="back-btn" data-home aria-label="タイトルへ">‹</button><h2 class="grow">魔女の道具屋</h2><span class="chip"><img class="coin-ic" src="assets/coin.webp" alt="金貨"><span data-coins>0</span></span></header>
+    <header class="bar"><button class="back-btn" data-home aria-label="タイトルへ">‹</button><h2 class="grow">魔女の道具屋</h2><span class="chip"><img class="coin-ic" src="assets/coin.webp" alt="コイン"><span data-coins>0</span></span></header>
     <div class="tabs" role="tablist"><button class="tab" role="tab" data-tab="items" aria-selected="true">アイテム</button><button class="tab" role="tab" data-tab="cosmetics" aria-selected="false">着せ替え</button></div>
     <div class="scroll"><div id="shop-body"></div></div>
   </section>
 
   <!-- collection -->
   <section class="screen" id="collection" hidden>
-    <header class="bar"><button class="back-btn" data-home aria-label="タイトルへ">‹</button><h2 class="grow">ポーション図鑑</h2><span class="chip"><img class="coin-ic" src="assets/coin.webp" alt="金貨"><span data-coins>0</span></span></header>
+    <header class="bar"><button class="back-btn" data-home aria-label="タイトルへ">‹</button><h2 class="grow">ポーション図鑑</h2><span class="chip"><img class="coin-ic" src="assets/coin.webp" alt="コイン"><span data-coins>0</span></span></header>
     <div class="coll-top"><span id="coll-total">0 / 100</span><span class="gauge wide"><i id="coll-bar" style="width:0"></i></span><span id="coll-complete" hidden>コンプリート</span></div>
     <div class="scroll"><div id="shelves"></div></div>
   </section>
@@ -486,55 +496,58 @@ img { max-width: 100%; }
 
   <!-- achievements -->
   <section class="screen" id="achievements" hidden>
-    <header class="bar"><button class="back-btn" data-home aria-label="タイトルへ">‹</button><h2 class="grow">実績</h2><span class="chip"><img class="coin-ic" src="assets/coin.webp" alt="金貨"><span data-coins>0</span></span></header>
+    <header class="bar"><button class="back-btn" data-home aria-label="タイトルへ">‹</button><h2 class="grow">実績</h2><span class="chip"><img class="coin-ic" src="assets/coin.webp" alt="コイン"><span data-coins>0</span></span></header>
     <div class="title-pick"><label for="title-select">トップに表示する称号</label><select id="title-select"></select></div>
     <div class="scroll"><div id="ach-list"></div></div>
   </section>
 
   <!-- daily -->
   <section class="screen" id="daily" hidden>
-    <header class="bar"><button class="back-btn" data-home aria-label="タイトルへ">‹</button><h2 class="grow">デイリーチャレンジ</h2><span class="chip"><img class="coin-ic" src="assets/coin.webp" alt="金貨"><span data-coins>0</span></span></header>
-    <div class="body">
+    <header class="bar"><button class="back-btn" data-home aria-label="タイトルへ">‹</button><h2 class="grow">デイリーチャレンジ</h2><span class="chip"><img class="coin-ic" src="assets/coin.webp" alt="コイン"><span data-coins>0</span></span></header>
+    <div class="daily-body">
+      <div class="trophy-row">
+        <canvas id="d-trophy" width="120" height="180"></canvas>
+        <div class="trophy-text"><div id="d-trophy-label"></div><div id="d-trophy-sub"></div></div>
+      </div>
       <div class="cal">
         <div class="cal-head"><button class="btn small" id="d-prev" aria-label="前の月">‹</button><h3 id="d-month"></h3><button class="btn small" id="d-next" aria-label="次の月">›</button></div>
         <div id="d-grid"></div>
       </div>
-      <div class="trophy-box">
-        <canvas id="d-trophy" width="180" height="270"></canvas>
-        <div id="d-trophy-label"></div>
-        <button class="btn primary" id="d-today">今日の問題に挑戦</button>
+      <div class="d-actions">
+        <div id="d-selected"></div>
+        <button class="btn primary" id="d-play">問題に挑戦</button>
       </div>
     </div>
   </section>
 
   <!-- mini game menu -->
   <section class="screen" id="minis" hidden>
-    <header class="bar"><button class="back-btn" data-home aria-label="タイトルへ">‹</button><h2 class="grow">ミニゲーム</h2><span class="chip"><img class="coin-ic" src="assets/coin.webp" alt="金貨"><span data-coins>0</span></span></header>
+    <header class="bar"><button class="back-btn" data-home aria-label="タイトルへ">‹</button><h2 class="grow">ミニゲーム</h2><span class="chip"><img class="coin-ic" src="assets/coin.webp" alt="コイン"><span data-coins>0</span></span></header>
     <div class="scroll">
       <div class="mini-cards">
+        <button class="mini-card" data-mini="clean"><img src="assets/clean_cloth.webp" alt=""><h3>お掃除</h3><p>こぼれたポーションをクロスで拭くだけ。机1台ごとにコイン2枚。</p><span class="best" data-best="tables"></span></button>
         <button class="mini-card" data-mini="cauldron"><img src="assets/mini_cauldron_sprites_7.webp" alt=""><h3>大釜キャッチ</h3><p>左右に動かして、指定の色の材料だけを大釜で受けます。カエルと毒キノコは避けて。45秒。</p><span class="best" data-best="cauldron"></span></button>
         <button class="mini-card" data-mini="broom"><img src="assets/mini_broom_sprites_0.webp" alt=""><h3>ほうきの夜間飛行</h3><p>タップで上昇。煙突とコウモリの間を抜けて、星を集めます。</p><span class="best" data-best="broom"></span></button>
-        <button class="mini-card" data-mini="clean"><img src="assets/clean_cloth.webp" alt=""><h3>お掃除</h3><p>こぼれたポーションをクロスで拭くだけ。机1台ごとに金貨2枚。</p><span class="best" data-best="tables"></span></button>
       </div>
     </div>
   </section>
   <section class="screen" id="mini" hidden>
-    <header class="bar"><button class="back-btn" id="mini-quit" aria-label="やめる">‹</button><h2 id="mini-title"></h2><span class="grow" id="mini-hud"></span><span class="chip"><img class="coin-ic" src="assets/coin.webp" alt="金貨"><span data-coins>0</span></span></header>
-    <div class="mini-wrap"><canvas id="mini-cv"></canvas><div id="mini-loading" hidden>準備しています…</div></div>
+    <header class="bar"><button class="back-btn" id="mini-quit" aria-label="やめる">‹</button><h2 id="mini-title"></h2><span class="grow" id="mini-hud"></span><span class="chip"><img class="coin-ic" src="assets/coin.webp" alt="コイン"><span data-coins>0</span></span></header>
+    <div class="mini-wrap"><canvas id="mini-cv"></canvas><div id="mini-loading" hidden>準備しています…</div><button class="btn" id="mini-next" hidden>次のテーブルへ</button></div>
   </section>
 
   <div id="dialogs"></div>
   <div id="toasts"></div>
 </div>
 
-<script src="engine.js?v=20261001023751" charset="utf-8"></script>
-<script src="data.js?v=20261001023751" charset="utf-8"></script>
-<script src="render.js?v=20261001023751" charset="utf-8"></script>
-<script src="audio.js?v=20261001023751" charset="utf-8"></script>
-<script src="store.js?v=20261001023751" charset="utf-8"></script>
-<script src="game.js?v=20261001023751" charset="utf-8"></script>
-<script src="mini.js?v=20261001023751" charset="utf-8"></script>
-<script src="app.js?v=20261001023751" charset="utf-8"></script>
+<script src="engine.js?v=20261002220056" charset="utf-8"></script>
+<script src="data.js?v=20261002220056" charset="utf-8"></script>
+<script src="render.js?v=20261002220056" charset="utf-8"></script>
+<script src="audio.js?v=20261002220056" charset="utf-8"></script>
+<script src="store.js?v=20261002220056" charset="utf-8"></script>
+<script src="game.js?v=20261002220056" charset="utf-8"></script>
+<script src="mini.js?v=20261002220056" charset="utf-8"></script>
+<script src="app.js?v=20261002220056" charset="utf-8"></script>
 <script>
   (function () {
     // iPhone / iPad home-screen app only (navigator.standalone exists only there)

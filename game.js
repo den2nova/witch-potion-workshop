@@ -289,7 +289,7 @@
         glow: selected ? 1 : guideHi ? 0.6 + 0.4 * Math.sin(t / 200) : 0,
         glowColor: guideHi ? 'rgba(140,255,230,0.95)' : undefined,
         shine: Board.revealShine(i, t),
-        inner: complete ? (c) => drawCork(c, i, rect, v) : null,
+        inner: complete && !s.giant ? (c) => drawCork(c, i, rect, v) : null,
       });
     }
     if (locked || ca) drawCurtain(ctx, i, rect, b, t);
@@ -522,7 +522,7 @@
     const ev = E.pour(s, a.from, a.to);
     Board.hooks.onMove && Board.hooks.onMove(ev);
     const t = now();
-    if (ev.completed) {
+    if (ev.completed && !s.giant) {
       Board.corks[a.to] = t;
       Snd.play('cork');
       Board.hooks.vibrate && Board.hooks.vibrate(30);
@@ -628,7 +628,7 @@
         Board.hooks.onCurtainTap && Board.hooks.onCurtainTap(b.curtain);
         return;
       }
-      if (!b.layers.length || E.isComplete(b, s.cap)) return;
+      if (!b.layers.length || (!s.giant && E.isComplete(b, s.cap))) return;
       Board.selected = i;
       Snd.play('select');
       return;

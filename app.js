@@ -55,7 +55,6 @@
     const blind = lv.k.includes('blind');
     const r = state.moves / lv.par;
     let st = r <= (blind ? 1.4 : 1.2) ? 3 : r <= (blind ? 2.0 : 1.6) ? 2 : 1;
-    if (state.shuffled) st = Math.min(st, 2);
     return st;
   }
   function vibrate(ms) { if (S.p.settings.vibration) Snd.vibrate(ms); }
@@ -236,7 +235,7 @@
     levels: () => { renderLevels(); show('levels'); },
     daily: () => {
       if (!dailyUnlocked()) { toast('レベル' + C.DAILY_UNLOCK + 'をクリアすると遊べます'); return; }
-      renderDaily(); show('daily'); ruleCard('daily');
+      openDaily(); show('daily'); ruleCard('daily');
     },
     minis: () => { show('minis'); ruleCard('minigame'); },
     shop: () => { renderShop(); show('shop'); ruleCard('shop'); },
@@ -329,7 +328,7 @@
     S.p.login = { last: today, day };
     S.changed({ soon: true });
     const parts = [];
-    if (rw.coins) parts.push('金貨 ' + rw.coins + '枚');
+    if (rw.coins) parts.push('コイン ' + rw.coins + '枚');
     if (rw.undo) parts.push(GD.ITEMS.undo.name + ' ×' + rw.undo);
     if (rw.shuffle) parts.push(GD.ITEMS.shuffle.name + ' ×' + rw.shuffle);
     const week = h('div', { class: 'lb-week' }, C.LOGIN_BONUS.map((r, i) => h('div', { class: 'lb-day' + (i + 1 === day ? ' today' : i + 1 < day ? ' got' : '') },
@@ -600,7 +599,7 @@
     dialog({
       title: it.name + 'がありません',
       body: h('div', { class: 'buy-row' }, img(it.icon, 'buy-ic'), h('div', null,
-        h('p', { class: 'panel-text', text: it.desc + '。金貨' + p.price + '枚で1個買えます。' }),
+        h('p', { class: 'panel-text', text: it.desc + '。コイン' + p.price + '枚で1個買えます。' }),
         h('p', { class: 'coins-line' }, img('coin', 'coin-ic'), h('span', { text: '所持 ' + S.coins() + '枚' })))),
       buttons: [
         { label: 'ミニゲームで稼ぐ', onClick: () => { saveCurrent(true); show('minis'); } },
@@ -699,14 +698,14 @@
       if (all) {
         S.p.seriesClaimed[si] = 1;
         S.grant({ coins: C.COIN.seriesDone }, 'シリーズ完成');
-        notes.push('シリーズ「' + GD.SERIES[si].name + '」完成! 金貨' + C.COIN.seriesDone + '枚');
+        notes.push('シリーズ「' + GD.SERIES[si].name + '」完成! コイン' + C.COIN.seriesDone + '枚');
       }
     }
     if (Object.keys(S.p.coll).length >= 100 && !S.p.completeClaimed) {
       S.p.completeClaimed = 1;
       S.grant({ coins: C.COIN.collectionDone }, '図鑑コンプリート');
       if (!S.p.cosmetics.owned.includes('cauldron')) S.p.cosmetics.owned.push('cauldron');
-      notes.push('図鑑コンプリート! 背景「月夜の大釜」と金貨' + C.COIN.collectionDone + '枚');
+      notes.push('図鑑コンプリート! 背景「月夜の大釜」とコイン' + C.COIN.collectionDone + '枚');
     }
   }
 
@@ -718,22 +717,18 @@
       h('dl', { class: 'clear-stats' },
         h('dt', { text: '手数' }), h('dd', { text: g.s.moves }),
         h('dt', { text: '目安の手数' }), h('dd', { text: lv.par }),
-        coins ? [h('dt', { text: '金貨' }), h('dd', { class: 'coin-dd' }, img('coin', 'coin-ic'), '+' + coins)] : null),
-      g.s.shuffled ? h('p', { class: 'note', text: 'シャッフルを使ったので星は2つまでです' }) : null,
+        coins ? [h('dt', { text: 'コイン' }), h('dd', { class: 'coin-dd' }, img('coin', 'coin-ic'), '+' + coins)] : null),
       notes.map((n) => h('p', { class: 'note', text: n })),
       registered ? h('div', { class: 'reg' }, img('giant_' + giantInfo(registered.idx).s + '_back', 'reg-img'),
         h('div', null, h('p', { class: 'reg-title', text: registered.first ? '図鑑に登録しました' : '図鑑の記録を更新しました' }),
           h('p', { class: 'reg-name', text: bottleName(registered.idx).name + '「' + bottleName(registered.idx).potion + '」' }),
           registered.newShape ? h('p', { class: 'reg-desc', text: bottleName(registered.idx).desc }) : null)) : null);
-    const buttons = [];
-    if (g.daily) {
-      buttons.push({ label: 'カレンダーへ', primary: true, onClick: () => { renderDaily(); show('daily'); } });
-    } else {
-      if (registered) buttons.push({ label: '図鑑で見る', onClick: () => { renderCollection(); show('collection'); openDetail(registered.idx); } });
-      buttons.push({ label: 'もう一度', onClick: () => startLevel(g.n, { fresh: true }) });
-      buttons.push({ label: 'レベル選択', onClick: () => { levelPage = Math.floor((g.n - 1) / 20); renderLevels(); show('levels'); } });
-      if (g.n < C.MAX_LEVEL) buttons.push({ label: '次へ', primary: true, onClick: () => startLevel(g.n + 1) });
-    }
+    // two buttons only: 次へ (next level, or back to the calendar after a daily) and ホーム
+    const goHome = () => { renderTitle(); show('title'); };
+    const next = g.daily
+      ? () => { renderDaily(); show('daily'); }
+      : g.n < C.MAX_LEVEL ? () => startLevel(g.n + 1) : goHome;
+    const buttons = [{ label: 'ホーム', onClick: goHome }, { label: '次へ', primary: true, onClick: next }];
     if (coins) Snd.play('coin');
     dialog({ title: stars === 3 ? 'すばらしい調合!' : 'ポーション完成!', body, buttons, cls: 'clear', closable: false });
     checkAchievementToast();
@@ -805,7 +800,7 @@
     } else if (t.kind === 'shuffle' && g.s.moves === 3) {
       g.freeUse.shuffle = true;
       updateToolbar();
-      showHint('行き詰まったら「かき混ぜの杖」で、選んだ瓶1本の中身を混ぜ直せます。今回は無料です(このレベルの星は2つまでになります)。', '#t-shuffle');
+      showHint('行き詰まったら「かき混ぜの杖」で、選んだ瓶1本の中身を混ぜ直せます。今回は無料です。', '#t-shuffle');
     }
   }
   function tutorialItemUsed(k) {
@@ -872,7 +867,6 @@
       h('div', { class: 'set-row' }, h('span', { text: '進捗の保存' }), h('span', { class: 'sync', text: 'この端末のブラウザに保存' })),
       h('p', { class: 'set-note', text: '進捗はこの端末のブラウザに保存されます。ブラウザのデータを消すと進捗も消えます。別の端末とは共有されません。' }),
       inGame ? h('div', { class: 'panel-actions' },
-        h('button', { class: 'btn', onclick: () => { d.close(); restart(false); } }, 'リトライ'),
         h('button', { class: 'btn', onclick: () => { d.close(); saveCurrent(true); renderTitle(); show('title'); } }, 'ホームに戻る')) : null,
       !inGame ? h('button', { class: 'btn danger small reset', onclick: () => resetFlow() }, '進捗をリセット') : null,
       h('p', { class: 'set-note diag', text: diagText() }));
@@ -886,7 +880,7 @@
     return '表示情報: ' + mode + ' / 画面 ' + screen.width + '×' + screen.height + ' / 窓 ' + innerWidth + '×' + innerHeight + ' / ゲーム ' + Math.round(st.width) + '×' + Math.round(st.height);
   }
   function resetFlow() {
-    confirmDlg('進捗をリセット', 'クリアしたレベル、金貨、アイテム、図鑑などがすべて最初に戻ります。', '次へ', () => {
+    confirmDlg('進捗をリセット', 'クリアしたレベル、コイン、アイテム、図鑑などがすべて最初に戻ります。', '次へ', () => {
       confirmDlg('本当にリセットしますか?', 'この操作は取り消せません。', 'リセットする', () => {
         S.reset();
         levelPage = null;
@@ -918,7 +912,7 @@
             h('div', { class: 'ware-have', text: '所持 ' + have + '個' })),
           h('button', {
             class: 'btn price', disabled: full || S.coins() < p.price,
-            onclick: () => confirmDlg('購入の確認', '金貨' + p.price + '枚で' + it.name + (p.qty > 1 ? 'を' + p.qty + '個' : '') + 'を買いますか?', '買う', () => {
+            onclick: () => confirmDlg('購入の確認', 'コイン' + p.price + '枚で' + it.name + (p.qty > 1 ? 'を' + p.qty + '個' : '') + 'を買いますか?', '買う', () => {
               if (S.spend('coins', p.price, it.short + '×' + p.qty + 'を購入')) { S.grant({ [p.item]: p.qty }, '購入'); Snd.play('coin'); toast(it.name + 'を買いました', it.icon); renderShop(); }
             }),
           }, img('coin', 'coin-ic'), String(p.price))));
@@ -948,7 +942,7 @@
       ? h('div', { class: 'pv-bottles' }, [0, 1, 2].map(() => img(c.img + '_back', 'pv-b')))
       : img(c.img + '_portrait', 'pv-bg');
     dialog({
-      title: c.name, body: h('div', null, pv, h('p', { class: 'panel-text', text: c.price == null ? c.how : '金貨' + c.price + '枚で買えます。' })),
+      title: c.name, body: h('div', null, pv, h('p', { class: 'panel-text', text: c.price == null ? c.how : 'コイン' + c.price + '枚で買えます。' })),
       buttons: c.price == null ? [{ label: '閉じる' }] : [{ label: 'やめる' }, {
         label: c.price + '枚で買う', primary: true, disabled: S.coins() < c.price, onClick: () => {
           if (S.spend('coins', c.price, c.name + 'を購入')) {
@@ -995,7 +989,8 @@
             slot.append(cv);
             drawThumb(cv, idx);
           } else {
-            slot.append(img('giant_' + gi.s + '_back', 'slot-img sil'), h('span', { class: 'slot-q', text: '???' }));
+            // not collected yet: keep the bottle's shape a secret
+            slot.append(h('span', { class: 'slot-hidden', 'aria-hidden': 'true', text: '?' }));
           }
           slots.append(slot);
         }
@@ -1255,7 +1250,7 @@
     S.changed({ soon: true });
     if (coins) S.grant({ coins }, '実績');
     Snd.play('coin');
-    toast(got.join('、') + (coins ? '、金貨' + coins + '枚' : ''), 'achievement_badge');
+    toast(got.join('、') + (coins ? '、コイン' + coins + '枚' : ''), 'achievement_badge');
     renderAchievements();
     renderTitle();
   }
@@ -1272,9 +1267,11 @@
     E.shuffleArr(cand, E.mulberry32(y * 100 + m));
     return cand[(d - 1) % cand.length];
   }
+  let dailySel = null;
   function renderDaily() {
     const today = S.today();
     if (!dailyMonth) dailyMonth = today.slice(0, 7);
+    if (!dailySel) dailySel = today;
     const [y, m] = dailyMonth.split('-').map(Number);
     $('#d-month').textContent = y + '年' + m + '月';
     const startYm = App.meta.dailyStart.slice(0, 7);
@@ -1295,19 +1292,32 @@
       const future = ds > today;
       const beforeStart = ds < App.meta.dailyStart;
       const cell = h('button', {
-        class: 'dday' + (rec ? ' done' : '') + (ds === today ? ' today' : '') + (future || beforeStart ? ' locked' : ''),
+        class: 'dday' + (rec ? ' done' : '') + (ds === today ? ' today' : '') + (ds === dailySel ? ' sel' : '') + (future || beforeStart ? ' locked' : ''),
         disabled: future || beforeStart,
         'aria-label': m + '月' + d + '日' + (rec ? ' クリア済み' : ''),
-        onclick: () => startLevel(dailyLevelFor(ds), { daily: ds }),
+        'aria-pressed': ds === dailySel ? 'true' : 'false',
+        onclick: () => { dailySel = ds; renderDaily(); },
       }, h('span', { class: 'dnum', text: d }), rec ? h('i', { class: 'drop', style: { background: col } }) : future ? h('span', { class: 'dlock', text: '🔒︎' }) : null);
       grid.append(cell);
     }
-    $('#d-trophy-label').textContent = GD.TROPHY_MOTIFS[m - 1] + 'のトロフィー ' + cleared + ' / ' + days;
+    $('#d-trophy-label').textContent = m + '月 ' + GD.TROPHY_MOTIFS[m - 1] + 'のトロフィー';
+    $('#d-trophy-sub').textContent = 'クリアした日 ' + cleared + ' / ' + days;
     drawTrophy($('#d-trophy'), m, cleared / days, y);
-    const todayRec = S.p.daily[today];
-    const tb = $('#d-today');
-    tb.textContent = todayRec ? '今日の問題(クリア済み)' : '今日の問題に挑戦';
-    tb.onclick = () => startLevel(dailyLevelFor(today), { daily: today });
+    // the play button always targets the selected day (today when the page opens)
+    const [sy, sm, sd] = dailySel.split('-').map(Number);
+    const done = !!S.p.daily[dailySel];
+    $('#d-selected').textContent = (dailySel === today ? '今日 ' : '') + sm + '月' + sd + '日の問題' + (done ? '(クリア済み)' : '');
+    const btn = $('#d-play');
+    btn.disabled = done;
+    btn.textContent = done ? 'クリア済み' : '問題に挑戦';
+    btn.onclick = () => { if (!S.p.daily[dailySel]) startLevel(dailyLevelFor(dailySel), { daily: dailySel }); };
+    void sy;
+  }
+  function openDaily() {
+    const today = S.today();
+    dailySel = today;
+    dailyMonth = today.slice(0, 7);
+    renderDaily();
   }
 
   // ---------------- keyboard ----------------

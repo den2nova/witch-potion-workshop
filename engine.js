@@ -79,7 +79,8 @@
   function canPour(s, i, j) {
     if (i === j) return false;
     const src = s.bottles[i];
-    if (!src || !src.layers.length || isLocked(src) || isComplete(src, s.cap)) return false;
+    // a finished bottle is sealed, except on giant-bottle stages where its colour may still be needed
+    if (!src || !src.layers.length || isLocked(src) || (!s.giant && isComplete(src, s.cap))) return false;
     const t = top(src);
     if (j === 'g') {
       const zc = zoneColor(s);
@@ -331,10 +332,13 @@
       let emptyTried = false;
       for (let i = 0; i < N; i++) {
         const src = st.b[i];
-        if (!src.length || st.L[i] || isDone(src)) continue;
+        if (!src.length || st.L[i]) continue;
+        const done = isDone(src);
+        if (done && !gCap) continue;
         const tc = src[src.length - 1] & 31;
         const r = run(src);
         if (zc >= 0 && tc === zc) out.push([i, -1, Math.min(r, gCap - st.g)]);
+        if (done) continue; // a finished bottle only ever pours into the giant bottle
         const mono = r === src.length;
         emptyTried = false;
         for (let j = 0; j < N; j++) {

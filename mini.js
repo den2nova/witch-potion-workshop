@@ -34,6 +34,8 @@
     await Promise.all(need.map((n) => R.load(n)));
     $('#mini-loading').hidden = true;
     M.stop();
+    const nb = $('#mini-next');
+    if (nb) nb.hidden = kind !== 'clean';
     const G = GAMES[kind]();
     M.cur = G;
     M.kind = kind;
@@ -372,7 +374,12 @@
         tx.fillStyle = COLORS[Math.floor(Math.random() * COLORS.length)];
         tx.fillRect(0, 0, tmp.width, tmp.height);
         const thick = Math.random() < 0.35;
-        const px = Math.random() * (M.W - tmp.width * 0.6), py = 50 + Math.random() * (M.H - tmp.height * 0.6 - 60);
+        // keep stains out of the bottom 20% of the table, which fingers can hardly reach on phones
+        const ext = Math.max(tmp.width, tmp.height);
+        const px = Math.random() * (M.W - tmp.width * 0.6);
+        const cyMax = Math.max(60, M.H * 0.8 - ext / 2);
+        const cy = Math.min(cyMax, 40 + ext / 2 + Math.random() * Math.max(0, cyMax - 40 - ext / 2));
+        const py = cy - tmp.height / 2;
         x.save();
         x.translate(px + tmp.width / 2, py + tmp.height / 2);
         x.rotate(Math.random() * Math.PI * 2);
@@ -413,7 +420,7 @@
       if (G.done || G.slide > 0) return;
       if (M.input.touch && !M.input.down) return;
       const p = cloth();
-      const r = Math.max(28, Math.min(M.W, M.H) * 0.075);
+      const r = Math.max(56, Math.min(M.W, M.H) * 0.15);
       const x = G.sctx;
       x.save();
       x.globalCompositeOperation = 'destination-out';
@@ -471,22 +478,35 @@
       if (M.input.has && !(M.input.touch && !M.input.down)) {
         const p = cloth();
         const cl = R.get('clean_cloth');
-        const s = Math.max(70, Math.min(W, H) * 0.2);
+        const s = Math.max(140, Math.min(W, H) * 0.4);
         if (cl) ctx.drawImage(cl, p.x - s / 2, p.y - s / 2, s, s * cl.naturalHeight / cl.naturalWidth);
       }
       hud('キレイ度 ' + Math.floor(G.clean * 100) + '%  ·  拭いた机 ' + G.tables + '台  ·  +' + G.earned + '枚');
     };
+    // 次のテーブルへ: give up on this table (no coins) and slide in a fresh one
+    G.skip = function () {
+      if (G.done || G.slide > 0) return;
+      G.done = true;
+      Snd.play('swish', 1);
+      G.prevTable = G.table;
+      G.sctx.clearRect(0, 0, M.W, M.H);
+      newTable();
+      G.slide = 1;
+    };
     G.onQuit = function () {
-      if (G.tables) root.App.toast('机' + G.tables + '台で金貨' + G.earned + '枚');
+      if (G.tables) root.App.toast('机' + G.tables + '台でコイン' + G.earned + '枚');
     };
     return G;
   };
 
   root.Minis = M;
-  document.addEventListener('DOMContentLoaded', () => {
+  function wireMini() {
     const q = $('#mini-quit');
     if (q) q.addEventListener('click', () => M.quit());
-  });
-  if (document.readyState !== 'loading') { const q = $('#mini-quit'); if (q) q.addEventListener('click', () => M.quit()); }
+    const nb = $('#mini-next');
+    if (nb) nb.addEventListener('click', () => { if (M.cur && M.cur.skip) M.cur.skip(); });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wireMini);
+  else wireMini();
   window.addEventListener('resize', () => { if (M.cur) { sizeCanvas(); if (M.kind === 'clean') { /* keep current table */ } } });
 })(typeof globalThis !== 'undefined' ? globalThis : this);
