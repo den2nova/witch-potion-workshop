@@ -355,12 +355,11 @@ img { max-width: 100%; }
 /* ---------- daily ---------- */
 /* daily: trophy on top, calendar in the middle, play button under it; fits one screen */
 .daily-body { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; padding-bottom: calc(8px + var(--safe-b)); overflow: hidden; }
-.trophy-row { display: flex; align-items: center; gap: 12px; flex: none; }
-#d-trophy { width: auto; height: clamp(84px, 17vh, 160px); aspect-ratio: 2 / 3; }
-.trophy-text { display: flex; flex-direction: column; gap: 2px; }
-#d-trophy-label { font-family: var(--font-display); font-size: 17px; }
-#d-trophy-sub { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
-.cal { width: min(100%, 420px); padding: 8px 10px 10px; border-radius: var(--r); background: var(--glass); border: 1px solid rgba(239, 201, 120, .35); flex: none; }
+.trophy-row { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: none; }
+#d-trophy { width: auto; height: clamp(76px, 15vh, 150px); aspect-ratio: 2 / 3; }
+#d-trophy-label { font-family: var(--font-display); font-size: 17px; text-align: center; }
+.trophy-gauge { display: flex; align-items: center; gap: 8px; font-size: 13px; font-variant-numeric: tabular-nums; }
+.cal { box-sizing: border-box; width: min(100%, 420px); padding: 8px 10px 10px; border-radius: var(--r); background: var(--glass); border: 1px solid rgba(239, 201, 120, .35); flex: none; }
 .cal-head { display: flex; align-items: center; justify-content: space-between; padding-bottom: 6px; }
 .cal-head h3 { font-size: 19px; }
 #d-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
@@ -507,7 +506,8 @@ img { max-width: 100%; }
     <div class="daily-body">
       <div class="trophy-row">
         <canvas id="d-trophy" width="120" height="180"></canvas>
-        <div class="trophy-text"><div id="d-trophy-label"></div><div id="d-trophy-sub"></div></div>
+        <div id="d-trophy-label"></div>
+        <div class="trophy-gauge"><span class="gauge wide"><i id="d-trophy-bar" style="width:0"></i></span><span id="d-trophy-num"></span></div>
       </div>
       <div class="cal">
         <div class="cal-head"><button class="btn small" id="d-prev" aria-label="前の月">‹</button><h3 id="d-month"></h3><button class="btn small" id="d-next" aria-label="次の月">›</button></div>
@@ -540,14 +540,14 @@ img { max-width: 100%; }
   <div id="toasts"></div>
 </div>
 
-<script src="engine.js?v=20261002220056" charset="utf-8"></script>
-<script src="data.js?v=20261002220056" charset="utf-8"></script>
-<script src="render.js?v=20261002220056" charset="utf-8"></script>
-<script src="audio.js?v=20261002220056" charset="utf-8"></script>
-<script src="store.js?v=20261002220056" charset="utf-8"></script>
-<script src="game.js?v=20261002220056" charset="utf-8"></script>
-<script src="mini.js?v=20261002220056" charset="utf-8"></script>
-<script src="app.js?v=20261002220056" charset="utf-8"></script>
+<script src="engine.js?v=20261002221550" charset="utf-8"></script>
+<script src="data.js?v=20261002221550" charset="utf-8"></script>
+<script src="render.js?v=20261002221550" charset="utf-8"></script>
+<script src="audio.js?v=20261002221550" charset="utf-8"></script>
+<script src="store.js?v=20261002221550" charset="utf-8"></script>
+<script src="game.js?v=20261002221550" charset="utf-8"></script>
+<script src="mini.js?v=20261002221550" charset="utf-8"></script>
+<script src="app.js?v=20261002221550" charset="utf-8"></script>
 <script>
   (function () {
     // iPhone / iPad home-screen app only (navigator.standalone exists only there)

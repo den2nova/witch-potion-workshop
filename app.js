@@ -1052,11 +1052,7 @@
     ctx.clearRect(0, 0, cv.width, cv.height);
     const segs = frac > 0 ? [{ f0: 0, f1: frac, color: GD.TROPHY_COLORS[month - 1] }] : [];
     R.drawVessel(ctx, v, { x: 0, y: 0, w: cv.width, h: cv.height }, segs, { noLines: true });
-    // year on the blank plaque
-    ctx.fillStyle = 'rgba(70,40,10,0.85)';
-    ctx.font = `700 ${Math.round(cv.width * 0.1)}px "Kaisei Decol", serif`;
-    ctx.textAlign = 'center';
-    ctx.fillText(String(year), cv.width / 2, cv.height * 0.9);
+    void year;
     R.dpr = dpr;
   }
 
@@ -1301,7 +1297,8 @@
       grid.append(cell);
     }
     $('#d-trophy-label').textContent = m + '月 ' + GD.TROPHY_MOTIFS[m - 1] + 'のトロフィー';
-    $('#d-trophy-sub').textContent = 'クリアした日 ' + cleared + ' / ' + days;
+    $('#d-trophy-num').textContent = cleared + ' / ' + days;
+    $('#d-trophy-bar').style.width = (cleared / days * 100) + '%';
     drawTrophy($('#d-trophy'), m, cleared / days, y);
     // the play button always targets the selected day (today when the page opens)
     const [sy, sm, sd] = dailySel.split('-').map(Number);
