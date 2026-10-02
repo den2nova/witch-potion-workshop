@@ -530,7 +530,7 @@
       Board.burst(r.x + r.w / 2, r.y + r.h * 0.2, 14, GD.COLORS[a.color].hex);
     }
     if (ev.zoneDone && !ev.giantDone) {
-      Snd.play('chime');
+      Snd.play('gfill'); // one bottle's worth reached in the giant bottle
       const r = Board.giantRect;
       Board.burst(r.x + r.w / 2, surfaceY(r, Board.giant, s.giant.filled / s.giant.capacity), 24, '#fff', 0.8);
     }

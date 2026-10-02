@@ -21,7 +21,7 @@
 
   const BASE = 'assets/';
   const EFFECTS = ['select', 'pour', 'pourDeep', 'error', 'cork', 'chime', 'reveal', 'curtain', 'coin', 'magic',
-    'swish', 'sparkle', 'bump', 'flap', 'tap', 'letter', 'receive', 'catch'];
+    'swish', 'sparkle', 'bump', 'flap', 'tap', 'letter', 'receive', 'catch', 'gfill'];
   function decode(buf) {
     return new Promise((resolve, reject) => {
       try {
@@ -157,7 +157,7 @@
         playBuffer(buf, o.vol, o);
         return;
       }
-      const alias = { letter: 'tap', receive: 'coin', catch: 'select' }[name] || name;
+      const alias = { letter: 'tap', receive: 'coin', catch: 'select', gfill: 'chime' }[name] || name;
       SFX[alias] && SFX[alias](arg);
     } catch (e) { /* ignore */ }
   };
