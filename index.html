@@ -334,10 +334,10 @@ img { max-width: 100%; }
 
 /* ---------- gacha ---------- */
 .ga-body { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding-bottom: calc(12px + var(--safe-b)); }
-.ga-machine { position: relative; width: min(56vw, 34vh, 260px); aspect-ratio: 1 / 1.25; }
-.ga-orb { position: absolute; left: 8%; right: 8%; top: 0; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff 0, #d9c8ff 12%, #7a52d6 45%, #2a1458 80%); box-shadow: 0 0 40px rgba(170, 130, 255, .7), inset 0 -12px 30px rgba(0, 0, 0, .4); animation: orbglow 3s ease-in-out infinite; }
-.ga-stand { position: absolute; left: 22%; right: 22%; bottom: 0; height: 26%; border-radius: 40% 40% 10px 10px; background: linear-gradient(180deg, #f3d48a, #b07a2f 60%, #6d4518); box-shadow: 0 8px 20px rgba(0, 0, 0, .5); }
-@keyframes orbglow { 50% { box-shadow: 0 0 70px rgba(200, 160, 255, .95), inset 0 -12px 30px rgba(0, 0, 0, .4); } }
+.ga-machine { position: relative; height: min(42vh, 360px); aspect-ratio: 493 / 780; max-width: 70vw; }
+.ga-machine img { width: 100%; height: 100%; object-fit: contain; animation: machglow 3s ease-in-out infinite; }
+@keyframes machglow { 0%, 100% { filter: drop-shadow(0 0 12px rgba(170, 130, 255, .45)); } 50% { filter: drop-shadow(0 0 30px rgba(200, 160, 255, .85)); } }
+.ga-info, .ga-note { background: rgba(16, 8, 34, .62); border-radius: 12px; padding: 4px 12px; }
 .ga-info { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 16px; font-variant-numeric: tabular-nums; }
 .ga-pt { display: inline-flex; align-items: center; gap: 6px; }
 .ga-row { display: flex; gap: 8px; }
@@ -578,7 +578,7 @@ img { max-width: 100%; }
   <section class="screen" id="gacha" hidden>
     <header class="bar"><button class="back-btn" data-home aria-label="タイトルへ">‹</button><h2 class="grow">星の福引き</h2><span class="chip"><img class="coin-ic" src="assets/coin.webp" alt="コイン"><span data-coins>0</span></span></header>
     <div class="ga-body">
-      <div class="ga-machine" aria-hidden="true"><div class="ga-orb"></div><div class="ga-stand"></div></div>
+      <div class="ga-machine" aria-hidden="true"><img src="assets/gacha_machine.webp" alt=""></div>
       <div class="ga-info">
         <span>集めた小物 <b id="ga-own">0</b> / 50</span>
         <span class="ga-pt">ポイント <b id="ga-pts">0</b> / 100 <span class="gauge"><i id="ga-ptbar" style="width:0"></i></span></span>
@@ -635,15 +635,15 @@ img { max-width: 100%; }
   <div id="toasts"></div>
 </div>
 
-<script src="engine.js?v=20261003020154" charset="utf-8"></script>
-<script src="data.js?v=20261003020154" charset="utf-8"></script>
-<script src="render.js?v=20261003020154" charset="utf-8"></script>
-<script src="audio.js?v=20261003020154" charset="utf-8"></script>
-<script src="store.js?v=20261003020154" charset="utf-8"></script>
-<script src="game.js?v=20261003020154" charset="utf-8"></script>
-<script src="mini.js?v=20261003020154" charset="utf-8"></script>
-<script src="gacha.js?v=20261003020154" charset="utf-8"></script>
-<script src="app.js?v=20261003020154" charset="utf-8"></script>
+<script src="engine.js?v=20261003023929" charset="utf-8"></script>
+<script src="data.js?v=20261003023929" charset="utf-8"></script>
+<script src="render.js?v=20261003023929" charset="utf-8"></script>
+<script src="audio.js?v=20261003023929" charset="utf-8"></script>
+<script src="store.js?v=20261003023929" charset="utf-8"></script>
+<script src="game.js?v=20261003023929" charset="utf-8"></script>
+<script src="mini.js?v=20261003023929" charset="utf-8"></script>
+<script src="gacha.js?v=20261003023929" charset="utf-8"></script>
+<script src="app.js?v=20261003023929" charset="utf-8"></script>
 <script>
   (function () {
     // iPhone / iPad home-screen app only (navigator.standalone exists only there)

@@ -268,6 +268,8 @@
 
   // ---------- canvas effects: the crystal orb charging up in the rarity colour ----------
   const parts = [];
+  const ORB = {};
+  ['N', 'R', 'SR', 'SSR'].forEach((rid) => { const im = new Image(); im.src = 'assets/gacha_orb_' + rid + '.webp'; ORB[rid] = im; });
   function burst(rid) {
     const cv = $('#ga-cv');
     const W = cv.clientWidth, H = cv.clientHeight;
@@ -308,16 +310,26 @@
         }
         ctx.restore();
       }
-      ctx.save();
-      ctx.shadowColor = col; ctx.shadowBlur = glow;
-      const g = ctx.createRadialGradient(cx - r * 0.3, cy - r * 0.35, r * 0.1, cx, cy, r);
-      g.addColorStop(0, '#ffffff');
-      g.addColorStop(0.35, col);
-      g.addColorStop(1, 'rgba(40,20,80,0.9)');
-      ctx.fillStyle = g;
       const wob = Math.sin(t / 60) * p * 4;
-      ctx.beginPath(); ctx.arc(cx + wob, cy, r * (1 + p * 0.12), 0, Math.PI * 2); ctx.fill();
-      ctx.restore();
+      const oi = ORB[p < 0.55 ? 'N' : rid];
+      if (oi.complete && oi.naturalWidth) {
+        // the orb art already carries its own glow; it swells and spins slowly as it charges
+        const sz = r * 2.5 * (1 + p * 0.15);
+        ctx.save(); ctx.translate(cx + wob, cy); ctx.rotate(t / 1500);
+        ctx.shadowColor = col; ctx.shadowBlur = glow * 0.6;
+        ctx.drawImage(oi, -sz / 2, -sz / 2, sz, sz);
+        ctx.restore();
+      } else {
+        ctx.save();
+        ctx.shadowColor = col; ctx.shadowBlur = glow;
+        const g = ctx.createRadialGradient(cx - r * 0.3, cy - r * 0.35, r * 0.1, cx, cy, r);
+        g.addColorStop(0, '#ffffff');
+        g.addColorStop(0.35, col);
+        g.addColorStop(1, 'rgba(40,20,80,0.9)');
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.arc(cx + wob, cy, r * (1 + p * 0.12), 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      }
       // swirling motes being pulled in
       for (let k = 0; k < 14; k++) {
         const a = k / 14 * Math.PI * 2 + t / 400;

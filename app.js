@@ -131,6 +131,7 @@
     let bgName = bg.img;
     if (App.screen === 'shop') bgName = 'shop_bg';
     if (App.screen === 'collection') bgName = 'collection_shelf';
+    if (App.screen === 'gacha') bgName = 'bg_gacha';
     root2.style.setProperty('--bg-p', `url("${R.base}${bgName === 'shop_bg' || bgName === 'collection_shelf' ? bgName : bgName + '_portrait'}.webp")`);
     root2.style.setProperty('--bg-l', `url("${R.base}${bgName === 'shop_bg' || bgName === 'collection_shelf' ? bgName : bgName + '_landscape'}.webp")`);
     const ach = achState();
