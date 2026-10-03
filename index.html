@@ -16,7 +16,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@500;700&family=Zen+Maru+Gothic:wght@500;700&display=swap">
-<script>try { var vt = localStorage.getItem('wp-viewtest'); if (vt) document.documentElement.classList.add('vt-' + vt); } catch (e) {}</script>
 <style>
 [hidden] { display: none !important; }
 /* Layout: one fixed full-screen stage; each screen is a column (header, body, footer) over the workshop painting.
@@ -56,27 +55,10 @@ body {
 @media (display-mode: standalone), (display-mode: fullscreen) {
   #stage { bottom: auto; height: max(100vh, calc(100% + env(safe-area-inset-top, 0px)), var(--app-h, 0px)); }
 }
-html.standalone #stage { bottom: auto; height: max(100vh, calc(100% + env(safe-area-inset-top, 0px)), var(--app-h, 0px)); }
-/* body's overflow:hidden is handed to the viewport, and in the home-screen app the viewport is shorter than the
-   screen (screen 812 vs window 762 on iPhone), so the bottom strip of the full-height stage was clipped away and
-   only the page background showed. Let the root paint past the window; the stage itself still clips. */
-html.standalone, html.standalone body { overflow: visible; }
-/* if the strip below the window is the page background, at least show the bottom of the scene there instead of flat navy */
-html.standalone { background: var(--bg-p) center bottom / cover no-repeat, var(--night); }
-@media (min-aspect-ratio: 1/1) { html.standalone { background-image: var(--bg-l); } }
-html.standalone body { background: transparent; }
-/* layout tests for the home-screen app bottom strip, picked in settings (see app.js viewTest):
-   the page background turns pink and the body light blue, so the colour of the strip tells what it is */
-html[class*="vt-"] { background: #ff2bd6 !important; }
-html[class*="vt-"] body { background: #2bdcff !important; }
-html.vt-abs, html.vt-abs body { height: var(--app-h, 100vh) !important; overflow: hidden !important; }
-html.vt-abs #stage { position: absolute !important; top: 0; left: 0; right: 0; bottom: auto; height: var(--app-h, 100vh) !important; }
-html.vt-lvh #stage { bottom: auto !important; height: 100lvh !important; }
-html.vt-calc, html.vt-calc body { height: calc(100vh + env(safe-area-inset-top, 0px)) !important; overflow: hidden !important; }
-html.vt-calc #stage { position: absolute !important; top: 0; left: 0; right: 0; bottom: auto; height: calc(100vh + env(safe-area-inset-top, 0px)) !important; }
-.vt-row { display: flex; flex-wrap: wrap; gap: 6px; }
-.vt-row .btn { min-height: 34px; padding: 4px 10px; font-size: 13px; }
-.vt-row .btn[aria-pressed="true"] { outline: 2px solid var(--mint); }
+/* iPhone home-screen app: the window is shorter than the screen (762 vs 812) and nothing fixed-position is drawn
+   below it, so the root and the stage are laid out at the full screen height instead (tested on device). */
+html.standalone, html.standalone body { height: var(--app-h, 100vh); overflow: hidden; }
+html.standalone #stage { position: absolute; top: 0; left: 0; right: 0; bottom: auto; height: var(--app-h, 100vh); }
 #stage::before {
   content: ""; position: absolute; inset: 0; z-index: 0;
   background: var(--bg-p) center / cover no-repeat, radial-gradient(ellipse at 50% 30%, #3b2370, var(--night) 70%);
@@ -656,15 +638,15 @@ img { max-width: 100%; }
   <div id="toasts"></div>
 </div>
 
-<script src="engine.js?v=20261004035418" charset="utf-8"></script>
-<script src="data.js?v=20261004035418" charset="utf-8"></script>
-<script src="render.js?v=20261004035418" charset="utf-8"></script>
-<script src="audio.js?v=20261004035418" charset="utf-8"></script>
-<script src="store.js?v=20261004035418" charset="utf-8"></script>
-<script src="game.js?v=20261004035418" charset="utf-8"></script>
-<script src="mini.js?v=20261004035418" charset="utf-8"></script>
-<script src="gacha.js?v=20261004035418" charset="utf-8"></script>
-<script src="app.js?v=20261004035418" charset="utf-8"></script>
+<script src="engine.js?v=20261004035852" charset="utf-8"></script>
+<script src="data.js?v=20261004035852" charset="utf-8"></script>
+<script src="render.js?v=20261004035852" charset="utf-8"></script>
+<script src="audio.js?v=20261004035852" charset="utf-8"></script>
+<script src="store.js?v=20261004035852" charset="utf-8"></script>
+<script src="game.js?v=20261004035852" charset="utf-8"></script>
+<script src="mini.js?v=20261004035852" charset="utf-8"></script>
+<script src="gacha.js?v=20261004035852" charset="utf-8"></script>
+<script src="app.js?v=20261004035852" charset="utf-8"></script>
 <script>
   (function () {
     // iPhone / iPad home-screen app only (navigator.standalone exists only there)
