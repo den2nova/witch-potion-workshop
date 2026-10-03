@@ -409,11 +409,12 @@ img { max-width: 100%; }
 
 /* ---------- daily ---------- */
 /* daily: trophy on top, calendar in the middle, play button under it; fits one screen */
-.daily-body { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; padding-bottom: 8px; overflow: hidden; }
+.daily-body { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding-bottom: 8px; overflow: hidden; }
 #daily .bar h2 { font-size: clamp(17px, 4.8vw, 22px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.trophy-row { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1 1 auto; min-height: 0; align-self: stretch; }
+.trophy-row { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1 1 auto; min-height: 0; max-height: 320px; align-self: stretch; }
+/* once the trophy reaches its cap, the spare height is split above and below so the play button never hugs the bottom edge */
 /* the trophy takes whatever height the calendar and the play button leave over */
-.trophy-box { position: relative; flex: 1 1 auto; min-height: 76px; max-height: 340px; width: 100%; }
+.trophy-box { position: relative; flex: 1 1 auto; min-height: 76px; width: 100%; }
 #d-trophy { position: absolute; left: 50%; top: 0; height: 100%; width: auto; aspect-ratio: 2 / 3; transform: translateX(-50%); }
 #d-trophy-label { font-family: var(--font-display); font-size: 17px; text-align: center; }
 .trophy-gauge { display: flex; align-items: center; gap: 8px; font-size: 13px; font-variant-numeric: tabular-nums; }
@@ -641,15 +642,15 @@ img { max-width: 100%; }
   <div id="toasts"></div>
 </div>
 
-<script src="engine.js?v=20261004040255" charset="utf-8"></script>
-<script src="data.js?v=20261004040255" charset="utf-8"></script>
-<script src="render.js?v=20261004040255" charset="utf-8"></script>
-<script src="audio.js?v=20261004040255" charset="utf-8"></script>
-<script src="store.js?v=20261004040255" charset="utf-8"></script>
-<script src="game.js?v=20261004040255" charset="utf-8"></script>
-<script src="mini.js?v=20261004040255" charset="utf-8"></script>
-<script src="gacha.js?v=20261004040255" charset="utf-8"></script>
-<script src="app.js?v=20261004040255" charset="utf-8"></script>
+<script src="engine.js?v=20261004040630" charset="utf-8"></script>
+<script src="data.js?v=20261004040630" charset="utf-8"></script>
+<script src="render.js?v=20261004040630" charset="utf-8"></script>
+<script src="audio.js?v=20261004040630" charset="utf-8"></script>
+<script src="store.js?v=20261004040630" charset="utf-8"></script>
+<script src="game.js?v=20261004040630" charset="utf-8"></script>
+<script src="mini.js?v=20261004040630" charset="utf-8"></script>
+<script src="gacha.js?v=20261004040630" charset="utf-8"></script>
+<script src="app.js?v=20261004040630" charset="utf-8"></script>
 <script>
   (function () {
     // iPhone / iPad home-screen app only (navigator.standalone exists only there)
