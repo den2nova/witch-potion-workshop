@@ -123,11 +123,12 @@
     if (s.giant && Board.giant) {
       const ga = Board.giant.aspect;
       if (H > W * 1.05) {
-        const gh = H * 0.5;
+        // the giant takes a bit over a third so the small bottles stay big enough to tap
+        const gh = H * 0.38;
         const gw = Math.min(gh * ga, W * 0.8);
         const gh2 = gw / ga;
         Board.giantRect = { x: (W - gw) / 2, y: pad + (gh - gh2) / 2, w: gw, h: gh2 };
-        Board.rects = gridFit(n, aspect, pad, gh + pad, W - pad * 2, H - gh - pad * 2, gh2 / 2.3);
+        Board.rects = gridFit(n, aspect, pad, gh + pad, W - pad * 2, H - gh - pad * 2, gh2 / 1.6);
       } else {
         const gh = H - pad * 2;
         const gw = Math.min(gh * ga, W * 0.36);
@@ -574,12 +575,18 @@
   // ---------- input ----------
   function hit(px, py) {
     const s = Board.s;
-    for (let i = s.bottles.length - 1; i >= 0; i--) {
+    // the nearest bottle wins, so the gaps between bottles are split down the middle instead of being dead space
+    let best = null, bd = Infinity;
+    for (let i = 0; i < s.bottles.length; i++) {
       const r = Board.rects[i];
       if (!r) continue;
-      const padX = Math.max(0, (44 - r.w) / 2) + r.w * 0.15;
-      if (px >= r.x - padX && px <= r.x + r.w + padX && py >= r.y - 20 && py <= r.y + r.h + 8) return i;
+      const dx = Math.max(r.x - px, 0, px - (r.x + r.w));
+      const dy = Math.max(r.y - py, 0, py - (r.y + r.h));
+      if (dx > Math.max((48 - r.w) / 2, r.w * 0.6) || dy > Math.max(24, r.h * 0.2)) continue;
+      const d = dx * dx + dy * dy;
+      if (d < bd) { bd = d; best = i; }
     }
+    if (best !== null) return best;
     const g = Board.giantRect;
     if (g && px >= g.x && px <= g.x + g.w && py >= g.y && py <= g.y + g.h) return 'g';
     return null;
