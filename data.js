@@ -139,7 +139,7 @@
       cleanTable: 5, dailyClear: 20, trophyFull: 200, seriesDone: 150, collectionDone: 1000,
     },
     LOGIN_BONUS: [
-      { coins: 10 }, { coins: 10 }, { coins: 15 }, { undo: 1 }, { coins: 20 }, { coins: 20 }, { coins: 50, shuffle: 1 },
+      { coins: 30 }, { coins: 40 }, { coins: 50 }, { undo: 1 }, { coins: 60 }, { coins: 80 }, { coins: 200, shuffle: 1 },
     ],
   };
 
