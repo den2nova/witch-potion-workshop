@@ -125,7 +125,7 @@
       return { bw, cw, ch, sideW, sideCols, sideRows, side: 2 * sideCols * sideRows, belowCols, belowRows, belowH, total: 2 * sideCols * sideRows + belowCols * belowRows };
     };
     const tries = [];
-    for (const f of [0.66, 0.62, 0.58, 0.54, 0.5]) {
+    for (const f of [0.66, 0.62, 0.58, 0.54, 0.5, 0.47, 0.44]) {
       const gw = Math.min(H * f * ga, W * 0.84), gh2 = gw / ga;
       let lo = 30, hi = Math.min(220, gh2 / 1.3);
       if (slots(lo, gw, gh2).total < n) continue;
@@ -162,8 +162,8 @@
       let i = 0;
       for (let r = 0; r < rows; r++) {
         const count = Math.min(per, m - i);
-        // spread the row across the full width: wider gaps give each bottle a wider tap zone
-        const gap = Math.min(S.bw * 1.4, (W - pad * 2 - count * S.bw) / count);
+        // a little wider than the side columns, but capped so the row stays a neat group
+        const gap = Math.min(Math.max(S.bw * 0.6, 20), (W - pad * 2 - count * S.bw) / count);
         const step = S.bw + gap;
         let x = (W - (count * step - gap)) / 2;
         for (let k = 0; k < count; k++, i++) { rects.push({ x, y: y0 + r * S.ch + (S.ch - bh) / 2 + 8, w: S.bw, h: bh }); x += step; }
