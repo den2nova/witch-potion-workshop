@@ -412,10 +412,12 @@
     show('game');
     $('#g-loading').hidden = false;
     const vkey = currentVesselKey();
-    let vessel = await R.loadVessel(vkey);
-    // bottles drawn with their own stopper get no extra cork when finished
+    // bottles with their own stopper are shown open and get that stopper (not a cork) when finished
     const cos = C.COSMETICS.find((x) => x.img === vkey);
     B.noCork = !!(cos && cos.stopper);
+    let vessel = await R.loadVessel(B.noCork ? vkey + '_open' : vkey);
+    B.stopper = B.noCork && vessel ? await R.load(vkey + '_stopper') : null;
+    if (B.noCork && !vessel) { vessel = await R.loadVessel(vkey); B.stopper = null; }
     if (!vessel) vessel = (await R.loadVessel('bottle')) || R.fallbackVessel();
     let giant = null;
     if (lv.g) {

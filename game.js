@@ -350,6 +350,7 @@
         shine: Board.revealShine(i, t),
         inner: complete && !s.giant && !Board.noCork ? (c) => drawCork(c, i, rect, v) : null,
       });
+      if (complete && !s.giant && Board.stopper) drawStopper(ctx, i, rect, v);
     }
     if (locked || ca) drawCurtain(ctx, i, rect, b, t);
   }
@@ -382,6 +383,26 @@
     ctx.save();
     ctx.globalAlpha = alpha;
     ctx.drawImage(cap, m.x - w / 2, y, w, h);
+    ctx.restore();
+  }
+
+  // the skin's own stopper (cut off its artwork) drops onto the open neck, in front of the glass
+  function drawStopper(ctx, key, rect, v) {
+    const im = Board.stopper;
+    if (!im || !im.naturalWidth || !v.geo.stopper) return;
+    const h = rect.h * v.geo.stopper;
+    let y = rect.y;
+    let alpha = 1;
+    const t0 = Board.corks[key];
+    if (t0) {
+      const p = clamp((now() - t0) / 400, 0, 1);
+      if (p >= 1) delete Board.corks[key];
+      y -= (1 - easeOut(p)) * 60;
+      alpha = clamp(p * 3, 0, 1);
+    }
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.drawImage(im, rect.x, y, rect.w, h);
     ctx.restore();
   }
 
