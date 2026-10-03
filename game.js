@@ -162,9 +162,11 @@
       let i = 0;
       for (let r = 0; r < rows; r++) {
         const count = Math.min(per, m - i);
-        const total = count * S.cw - S.bw * 0.3;
-        let x = (W - total) / 2;
-        for (let k = 0; k < count; k++, i++) { rects.push({ x, y: y0 + r * S.ch + (S.ch - bh) / 2 + 8, w: S.bw, h: bh }); x += S.cw; }
+        // spread the row across the full width: wider gaps give each bottle a wider tap zone
+        const gap = Math.min(S.bw * 1.4, (W - pad * 2 - count * S.bw) / count);
+        const step = S.bw + gap;
+        let x = (W - (count * step - gap)) / 2;
+        for (let k = 0; k < count; k++, i++) { rects.push({ x, y: y0 + r * S.ch + (S.ch - bh) / 2 + 8, w: S.bw, h: bh }); x += step; }
       }
     }
     return { giant, rects };
@@ -638,7 +640,7 @@
       if (!r) continue;
       const dx = Math.max(r.x - px, 0, px - (r.x + r.w));
       const dy = Math.max(r.y - py, 0, py - (r.y + r.h));
-      if (dx > Math.max((48 - r.w) / 2, r.w * 0.6) || dy > Math.max(24, r.h * 0.2)) continue;
+      if (dx > Math.max(24 - r.w / 2, r.w * 0.9) || dy > Math.max(24, r.h * 0.2)) continue;
       const d = dx * dx + dy * dy;
       if (d < bd) { bd = d; best = i; }
     }
