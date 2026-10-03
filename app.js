@@ -876,10 +876,23 @@
       inGame ? h('div', { class: 'panel-actions' },
         h('button', { class: 'btn', onclick: () => { d.close(); saveCurrent(true); renderTitle(); show('title'); } }, 'ホームに戻る')) : null,
       !inGame ? h('button', { class: 'btn danger small reset', onclick: () => resetFlow() }, '進捗をリセット') : null,
-      h('p', { class: 'set-note diag', text: diagText() }));
+      h('p', { class: 'set-note diag', text: diagText() }),
+      navigator.standalone === true || location.search.includes('viewtest') ? viewTest() : null);
     const d = dialog({ title: '設定', body, cls: 'settings-panel' });
   }
   App.openSettings = openSettings;
+  // home-screen app only: switch between layout variants to find out what the dark strip at the bottom is
+  function viewTest() {
+    let cur = '';
+    try { cur = localStorage.getItem('wp-viewtest') || ''; } catch (e) { /* storage blocked */ }
+    const modes = [['', '通常'], ['color', '色で確認'], ['abs', '配置A'], ['lvh', '配置B'], ['calc', '配置C']];
+    return h('div', { class: 'set-test' },
+      h('p', { class: 'set-note', text: '表示テスト: 下の帯がピンクならページの地、水色ならページ本体、紺のままならアプリの外側です。' }),
+      h('div', { class: 'vt-row' }, modes.map(([id, label]) => h('button', {
+        class: 'btn small', 'aria-pressed': cur === id ? 'true' : 'false',
+        onclick: () => { try { if (id) localStorage.setItem('wp-viewtest', id); else localStorage.removeItem('wp-viewtest'); } catch (e) { /* storage blocked */ } location.reload(); },
+      }, label))));
+  }
   // screen measurements, shown small in settings to help diagnose layout problems on phones
   function diagText() {
     const st = document.getElementById('stage').getBoundingClientRect();
