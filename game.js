@@ -111,6 +111,65 @@
     return out;
   }
 
+  // portrait giant stage: the giant sits top centre and small bottles fill the columns beside it first,
+  // then rows underneath, so both the giant and the small bottles can stay large
+  function giantPortrait(n, aspect, ga, W, H, pad) {
+    const slots = (bh, gw, gh2) => {
+      const bw = bh * aspect, cw = bw * 1.3, ch = bh * 1.06 + 18; // row gap just clears the selection lift
+      const sideW = (W - gw) / 2 - pad * 1.5;
+      const sideCols = Math.max(0, Math.floor((sideW + bw * 0.3) / cw));
+      const sideRows = Math.floor(gh2 / ch);
+      const belowH = H - gh2 - pad * 3;
+      const belowCols = Math.max(0, Math.floor((W - pad * 2 + bw * 0.3) / cw));
+      const belowRows = Math.max(0, Math.floor(belowH / ch));
+      return { bw, cw, ch, sideW, sideCols, sideRows, side: 2 * sideCols * sideRows, belowCols, belowRows, belowH, total: 2 * sideCols * sideRows + belowCols * belowRows };
+    };
+    const tries = [];
+    for (const f of [0.66, 0.62, 0.58, 0.54, 0.5]) {
+      const gw = Math.min(H * f * ga, W * 0.84), gh2 = gw / ga;
+      let lo = 30, hi = Math.min(220, gh2 / 1.3);
+      if (slots(lo, gw, gh2).total < n) continue;
+      for (let k = 0; k < 24; k++) { const mid = (lo + hi) / 2; if (slots(mid, gw, gh2).total >= n) lo = mid; else hi = mid; }
+      tries.push({ f, gw, gh2, bh: lo });
+    }
+    if (!tries.length) {
+      const gh = H * 0.4, gw = Math.min(gh * ga, W * 0.8), gh2 = gw / ga;
+      return { giant: { x: (W - gw) / 2, y: pad, w: gw, h: gh2 }, rects: gridFit(n, aspect, pad, gh2 + pad * 2, W - pad * 2, H - gh2 - pad * 3, gh2 / 1.6) };
+    }
+    // the biggest small bottles win; among near-ties the biggest giant
+    const top = Math.max(...tries.map((t) => t.bh));
+    const t = tries.filter((q) => q.bh >= top * 0.96).sort((a, b) => b.f - a.f)[0];
+    const { gw, gh2, bh } = t;
+    const S = slots(bh, gw, gh2);
+    const giant = { x: (W - gw) / 2, y: pad, w: gw, h: gh2 };
+    const rects = [];
+    const perSide = Math.min(S.sideCols * S.sideRows, Math.floor(n / 2));
+    // beside the giant: columns stacked from the inside out, centred on the giant's height
+    for (const dir of [-1, 1]) {
+      const cols = Math.ceil(perSide / Math.max(1, S.sideRows));
+      for (let c = 0; c < cols; c++) {
+        const cnt = Math.min(S.sideRows, perSide - c * S.sideRows);
+        const x = dir < 0 ? giant.x - pad * 0.5 - (c + 1) * S.cw + S.bw * 0.3 : giant.x + gw + pad * 0.5 + c * S.cw;
+        const y0 = giant.y + (gh2 - cnt * S.ch) / 2;
+        for (let r = 0; r < cnt; r++) rects.push({ x, y: y0 + r * S.ch + (S.ch - bh) / 2 + 8, w: S.bw, h: bh });
+      }
+    }
+    const m = n - perSide * 2;
+    if (m > 0) {
+      const rows = Math.ceil(m / Math.max(1, S.belowCols));
+      const per = Math.ceil(m / rows);
+      const y0 = gh2 + pad * 2 + (S.belowH - rows * S.ch) / 2;
+      let i = 0;
+      for (let r = 0; r < rows; r++) {
+        const count = Math.min(per, m - i);
+        const total = count * S.cw - S.bw * 0.3;
+        let x = (W - total) / 2;
+        for (let k = 0; k < count; k++, i++) { rects.push({ x, y: y0 + r * S.ch + (S.ch - bh) / 2 + 8, w: S.bw, h: bh }); x += S.cw; }
+      }
+    }
+    return { giant, rects };
+  }
+
   Board.layout = function () {
     const s = Board.s;
     if (!s) return;
@@ -123,12 +182,9 @@
     if (s.giant && Board.giant) {
       const ga = Board.giant.aspect;
       if (H > W * 1.05) {
-        // the giant takes a bit over a third so the small bottles stay big enough to tap
-        const gh = H * 0.38;
-        const gw = Math.min(gh * ga, W * 0.8);
-        const gh2 = gw / ga;
-        Board.giantRect = { x: (W - gw) / 2, y: pad + (gh - gh2) / 2, w: gw, h: gh2 };
-        Board.rects = gridFit(n, aspect, pad, gh + pad, W - pad * 2, H - gh - pad * 2, gh2 / 1.6);
+        const L = giantPortrait(n, aspect, ga, W, H, pad);
+        Board.giantRect = L.giant;
+        Board.rects = L.rects;
       } else {
         const gh = H - pad * 2;
         const gw = Math.min(gh * ga, W * 0.36);
