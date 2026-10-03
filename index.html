@@ -56,6 +56,10 @@ body {
   #stage { bottom: auto; height: max(100vh, calc(100% + env(safe-area-inset-top, 0px)), var(--app-h, 0px)); }
 }
 html.standalone #stage { bottom: auto; height: max(100vh, calc(100% + env(safe-area-inset-top, 0px)), var(--app-h, 0px)); }
+/* body's overflow:hidden is handed to the viewport, and in the home-screen app the viewport is shorter than the
+   screen (screen 812 vs window 762 on iPhone), so the bottom strip of the full-height stage was clipped away and
+   only the page background showed. Let the root paint past the window; the stage itself still clips. */
+html.standalone, html.standalone body { overflow: visible; }
 #stage::before {
   content: ""; position: absolute; inset: 0; z-index: 0;
   background: var(--bg-p) center / cover no-repeat, radial-gradient(ellipse at 50% 30%, #3b2370, var(--night) 70%);
@@ -635,15 +639,15 @@ img { max-width: 100%; }
   <div id="toasts"></div>
 </div>
 
-<script src="engine.js?v=20261004033529" charset="utf-8"></script>
-<script src="data.js?v=20261004033529" charset="utf-8"></script>
-<script src="render.js?v=20261004033529" charset="utf-8"></script>
-<script src="audio.js?v=20261004033529" charset="utf-8"></script>
-<script src="store.js?v=20261004033529" charset="utf-8"></script>
-<script src="game.js?v=20261004033529" charset="utf-8"></script>
-<script src="mini.js?v=20261004033529" charset="utf-8"></script>
-<script src="gacha.js?v=20261004033529" charset="utf-8"></script>
-<script src="app.js?v=20261004033529" charset="utf-8"></script>
+<script src="engine.js?v=20261004034634" charset="utf-8"></script>
+<script src="data.js?v=20261004034634" charset="utf-8"></script>
+<script src="render.js?v=20261004034634" charset="utf-8"></script>
+<script src="audio.js?v=20261004034634" charset="utf-8"></script>
+<script src="store.js?v=20261004034634" charset="utf-8"></script>
+<script src="game.js?v=20261004034634" charset="utf-8"></script>
+<script src="mini.js?v=20261004034634" charset="utf-8"></script>
+<script src="gacha.js?v=20261004034634" charset="utf-8"></script>
+<script src="app.js?v=20261004034634" charset="utf-8"></script>
 <script>
   (function () {
     // iPhone / iPad home-screen app only (navigator.standalone exists only there)
@@ -657,6 +661,8 @@ img { max-width: 100%; }
       root.style.setProperty('--app-h', Math.max(full, window.innerHeight) + 'px');
     };
     fit();
+    // with the root no longer clipping, never let the page itself scroll
+    window.addEventListener('scroll', () => { if (window.scrollY || window.scrollX) window.scrollTo(0, 0); }, { passive: true });
     window.addEventListener('resize', fit);
     window.addEventListener('orientationchange', () => setTimeout(fit, 300));
   })();

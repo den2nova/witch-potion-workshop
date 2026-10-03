@@ -884,7 +884,12 @@
   function diagText() {
     const st = document.getElementById('stage').getBoundingClientRect();
     const mode = navigator.standalone === true ? 'ホーム画面' : (matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches ? 'アプリ' : 'ブラウザ');
-    return '表示情報: ' + mode + ' / 画面 ' + screen.width + '×' + screen.height + ' / 窓 ' + innerWidth + '×' + innerHeight + ' / ゲーム ' + Math.round(st.width) + '×' + Math.round(st.height);
+    const pr = document.createElement('div');
+    pr.style.cssText = 'position:fixed;visibility:hidden;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)';
+    document.body.append(pr);
+    const cs = getComputedStyle(pr), sa = parseInt(cs.paddingTop) + '/' + parseInt(cs.paddingBottom);
+    pr.remove();
+    return '表示情報: ' + mode + ' / 画面 ' + screen.width + '×' + screen.height + ' / 窓 ' + innerWidth + '×' + innerHeight + ' / ゲーム ' + Math.round(st.width) + '×' + Math.round(st.height) + ' (上端' + Math.round(st.top) + ') / 余白 ' + sa + ' / ' + getComputedStyle(document.body).overflowY;
   }
   function resetFlow() {
     confirmDlg('進捗をリセット', 'クリアしたレベル、コイン、アイテム、図鑑などがすべて最初に戻ります。', '次へ', () => {
