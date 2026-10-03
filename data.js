@@ -136,7 +136,7 @@
     ],
     COIN: {
       clearBase: 10, perStar: 5, giantBonus: 30, replay: 5, starUp: 5,
-      cleanTable: 5, dailyClear: 20, trophyFull: 200, seriesDone: 150, collectionDone: 1000,
+      cleanTable: 10, dailyClear: 20, trophyFull: 200, seriesDone: 150, collectionDone: 1000,
     },
     LOGIN_BONUS: [
       { coins: 30 }, { coins: 40 }, { coins: 50 }, { undo: 1 }, { coins: 60 }, { coins: 80 }, { coins: 200, shuffle: 1 },
