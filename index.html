@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#120a24">
 <meta name="description" content="月夜の工房で薬瓶のポーションを注ぎ分けるウォーターソートパズル">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -642,15 +642,15 @@ img { max-width: 100%; }
   <div id="toasts"></div>
 </div>
 
-<script src="engine.js?v=20261004045654" charset="utf-8"></script>
-<script src="data.js?v=20261004045654" charset="utf-8"></script>
-<script src="render.js?v=20261004045654" charset="utf-8"></script>
-<script src="audio.js?v=20261004045654" charset="utf-8"></script>
-<script src="store.js?v=20261004045654" charset="utf-8"></script>
-<script src="game.js?v=20261004045654" charset="utf-8"></script>
-<script src="mini.js?v=20261004045654" charset="utf-8"></script>
-<script src="gacha.js?v=20261004045654" charset="utf-8"></script>
-<script src="app.js?v=20261004045654" charset="utf-8"></script>
+<script src="engine.js?v=20261004125519" charset="utf-8"></script>
+<script src="data.js?v=20261004125519" charset="utf-8"></script>
+<script src="render.js?v=20261004125519" charset="utf-8"></script>
+<script src="audio.js?v=20261004125519" charset="utf-8"></script>
+<script src="store.js?v=20261004125519" charset="utf-8"></script>
+<script src="game.js?v=20261004125519" charset="utf-8"></script>
+<script src="mini.js?v=20261004125519" charset="utf-8"></script>
+<script src="gacha.js?v=20261004125519" charset="utf-8"></script>
+<script src="app.js?v=20261004125519" charset="utf-8"></script>
 <script>
   (function () {
     // iPhone / iPad home-screen app only (navigator.standalone exists only there)
@@ -668,6 +668,27 @@ img { max-width: 100%; }
     window.addEventListener('scroll', () => { if (window.scrollY || window.scrollX) window.scrollTo(0, 0); }, { passive: true });
     window.addEventListener('resize', fit);
     window.addEventListener('orientationchange', () => setTimeout(fit, 300));
+  })();
+  (function () {
+    // no double-tap zoom or pinch zoom anywhere; the board and mini-game canvas handle their own pointers
+    const free = (el) => el && el.closest && el.closest('#board, #mini-cv');
+    let lastEnd = 0;
+    document.addEventListener('touchend', (e) => {
+      const t = performance.now();
+      if (t - lastEnd < 320 && !free(e.target)) e.preventDefault();
+      lastEnd = t;
+    }, { passive: false });
+    document.addEventListener('dblclick', (e) => { if (!free(e.target)) e.preventDefault(); }, { passive: false });
+    ['gesturestart', 'gesturechange'].forEach((ev) => document.addEventListener(ev, (e) => e.preventDefault(), { passive: false }));
+    // a quick second press on the same button (buy, claim, pull, confirm) is ignored; the item toolbar may repeat
+    let lastBtn = null, lastAt = 0;
+    document.addEventListener('click', (e) => {
+      const b = e.target.closest && e.target.closest('button');
+      if (!b || b.closest('.toolbar')) return;
+      const t = performance.now();
+      if (b === lastBtn && t - lastAt < 450) { e.stopImmediatePropagation(); e.preventDefault(); return; }
+      lastBtn = b; lastAt = t;
+    }, true);
   })();
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
     window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
