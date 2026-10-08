@@ -135,7 +135,7 @@
       { id: 'cauldron', type: 'bg', name: '月夜の大釜', price: null, how: '図鑑コンプリートの報酬', img: 'bg_cauldron' },
     ],
     COIN: {
-      clearBase: 90, perStar: 10, giantBonus: 70, replay: 15, starUp: 10,
+      clearBase: 90, perStar: 10, giantBonus: 80, replay: 15, starUp: 10,
       cleanTable: 20, dailyClear: 100, trophyFull: 400, seriesDone: 300, collectionDone: 1000,
     },
     LOGIN_BONUS: [
