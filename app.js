@@ -531,31 +531,6 @@
     scheduleSave();
   }
 
-  let worker = null;
-  // resolves true / false, or null when the check could not finish in time (the busy worker is then dropped,
-  // so a slow search never queues up behind the next one)
-  function checkSolvable(state, ms) {
-    return new Promise((resolve) => {
-      try {
-        if (!worker) worker = new Worker('solver-worker.js');
-        const w = worker;
-        const id = Math.random();
-        let done = false;
-        const finish = (v) => { if (done) return; done = true; w.removeEventListener('message', onMsg); w.removeEventListener('error', onErr); resolve(v); };
-        const onMsg = (e) => { if (e.data.id === id) finish(e.data.ok); };
-        const onErr = () => { if (worker === w) { w.terminate(); worker = null; } finish(null); };
-        w.addEventListener('message', onMsg);
-        w.addEventListener('error', onErr);
-        w.postMessage({ id, state: JSON.parse(JSON.stringify(state)), maxNodes: 60000, weight: 2.5 });
-        setTimeout(() => { if (!done && worker === w) { w.terminate(); worker = null; } finish(null); }, ms || 2500);
-      } catch (err) {
-        // no worker: check on the main thread with a smaller budget
-        const r = E.solve(state, 20000, 3);
-        resolve(!!r.path);
-      }
-    });
-  }
-
   // shuffle item: the player picks one small bottle, and only that bottle's layers are mixed
   function doShuffle(free) {
     const g = App.game;
@@ -576,35 +551,17 @@
   }
   App.cancelPick = cancelPick;
 
-  async function shuffleOne(i, free) {
+  function shuffleOne(i, free) {
     const g = App.game;
     const s = g.s;
     const rng = E.mulberry32((Date.now() & 0xffffff) ^ (s.moves * 7919) ^ (i * 104729));
-    // try each distinct new order of the bottle once, in random order, within a few seconds in total
+    // always mix: pick one of the bottle's other block orders at random (red 2 / orange 1 becomes orange 1 / red 2).
+    // Whether the board stays solvable is left to the player, the same as any other move.
     const options = E.shuffleOptions(s, i);
-    for (let k = options.length - 1; k > 0; k--) { const j = Math.floor(rng() * (k + 1)); [options[k], options[j]] = [options[j], options[k]]; }
-    $('#g-busy').hidden = false;
-    let found = null;
-    try {
-      const deadline = performance.now() + 6000;
-      for (const layers of options) {
-        const left = deadline - performance.now();
-        if (left < 300) break;
-        const c = E.clone(s);
-        c.bottles[i].layers = layers.map((l) => ({ c: l.c, h: l.h }));
-        c.bottles[i].layers[c.bottles[i].layers.length - 1].h = false;
-        c.history = [];
-        E.updateCurtains(c);
-        const ok = E.isSolved(c) || await checkSolvable(c, Math.min(2500, left));
-        if (ok) { found = c; break; }
-      }
-    } catch (err) {
-      found = null;
-    } finally {
-      $('#g-busy').hidden = true;
-    }
-    if (!found) { toast('この瓶をいま混ぜると解けなくなるため、混ぜられませんでした(アイテムは減っていません)'); return; }
-    s.bottles[i].layers = found.bottles[i].layers;
+    if (!options.length) { toast('この瓶は混ぜても並びが変わりません(アイテムは減っていません)'); return; }
+    const layers = options[Math.floor(rng() * options.length)].map((l) => ({ c: l.c, h: l.h }));
+    layers[layers.length - 1].h = false;
+    s.bottles[i].layers = layers;
     s.history = [];
     s.shuffled = true;
     s.itemsUsed++;

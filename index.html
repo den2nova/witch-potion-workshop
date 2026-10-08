@@ -183,7 +183,7 @@ img { max-width: 100%; }
   #game .icon-btn img { width: 38px; height: 38px; }
 }
 #board { position: absolute; inset: 0; touch-action: none; }
-#g-loading, #g-busy { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); pointer-events: none; font-size: 14px; }
+#g-loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); pointer-events: none; font-size: 14px; }
 .toolbar { display: flex; justify-content: center; gap: clamp(8px, 3vw, 22px); padding: 6px 0 calc(10px + var(--safe-b)); }
 .tool { position: relative; width: 64px; height: 64px; border: 0; background: none; padding: 0; display: grid; place-items: center; transition: transform .12s, filter .2s; }
 .tool img { width: 58px; height: 58px; filter: drop-shadow(0 4px 8px rgba(0, 0, 0, .55)); }
@@ -513,7 +513,6 @@ img { max-width: 100%; }
     <div id="board-wrap">
       <canvas id="board" aria-label="ポーションの瓶"></canvas>
       <div id="g-loading" hidden>瓶を並べています…</div>
-      <div id="g-busy" hidden>杖で混ぜています…</div>
       <div id="hand" hidden><div class="finger" aria-hidden="true">☝︎</div><span></span></div>
       <button class="btn small" id="skip-tut" hidden>スキップ</button>
       <div id="hint" hidden></div>
@@ -642,15 +641,15 @@ img { max-width: 100%; }
   <div id="toasts"></div>
 </div>
 
-<script src="engine.js?v=20261009020229" charset="utf-8"></script>
-<script src="data.js?v=20261009020229" charset="utf-8"></script>
-<script src="render.js?v=20261009020229" charset="utf-8"></script>
-<script src="audio.js?v=20261009020229" charset="utf-8"></script>
-<script src="store.js?v=20261009020229" charset="utf-8"></script>
-<script src="game.js?v=20261009020229" charset="utf-8"></script>
-<script src="mini.js?v=20261009020229" charset="utf-8"></script>
-<script src="gacha.js?v=20261009020229" charset="utf-8"></script>
-<script src="app.js?v=20261009020229" charset="utf-8"></script>
+<script src="engine.js?v=20261009021010" charset="utf-8"></script>
+<script src="data.js?v=20261009021010" charset="utf-8"></script>
+<script src="render.js?v=20261009021010" charset="utf-8"></script>
+<script src="audio.js?v=20261009021010" charset="utf-8"></script>
+<script src="store.js?v=20261009021010" charset="utf-8"></script>
+<script src="game.js?v=20261009021010" charset="utf-8"></script>
+<script src="mini.js?v=20261009021010" charset="utf-8"></script>
+<script src="gacha.js?v=20261009021010" charset="utf-8"></script>
+<script src="app.js?v=20261009021010" charset="utf-8"></script>
 <script>
   (function () {
     // iPhone / iPad home-screen app only (navigator.standalone exists only there)
