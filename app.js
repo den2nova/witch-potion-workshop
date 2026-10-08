@@ -53,9 +53,9 @@
   }
   function starsFor(state, lv) {
     const blind = lv.k.includes('blind');
-    const r = state.moves / lv.par;
-    let st = r <= (blind ? 1.4 : 1.2) ? 3 : r <= (blind ? 2.0 : 1.6) ? 2 : 1;
-    return st;
+    // a fixed margin over the target moves (blind stages get 2 extra moves of slack)
+    const over = state.moves - lv.par - (blind ? 2 : 0);
+    return over <= 5 ? 3 : over <= 8 ? 2 : 1;
   }
   function vibrate(ms) { if (S.p.settings.vibration) Snd.vibrate(ms); }
   function fmtDate(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
