@@ -342,7 +342,11 @@
       h('div', { class: 'news-date', text: n.date }),
       h('ul', null, (n.body || []).map((t) => h('li', { text: t }))))) : h('p', { class: 'panel-text', text: 'お知らせはまだありません。' }));
     Snd.play('letter');
-    dialog({ title: 'お知らせ', cls: 'news-panel', body: h('div', { class: 'news-body' }, h('div', { class: 'letter' }, img('letter', 'letter-img')), list), buttons: [{ label: '閉じる', primary: true }] });
+    const wrap = h('div', { class: 'news-scroll' }, list);
+    const more = () => wrap.classList.toggle('more', list.scrollTop + list.clientHeight < list.scrollHeight - 4);
+    list.addEventListener('scroll', more, { passive: true });
+    dialog({ title: 'お知らせ', cls: 'news-panel', body: h('div', { class: 'news-body' }, h('div', { class: 'letter' }, img('letter', 'letter-img')), wrap), buttons: [{ label: '閉じる', primary: true }] });
+    setTimeout(more, 50);
     news.items.forEach((n) => { if (!newsRead().includes(n.id)) newsRead().push(n.id); });
     S.changed();
     updateNewsDot();
