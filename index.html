@@ -118,6 +118,15 @@ img { max-width: 100%; }
 /* ---------- title ---------- */
 #title { align-items: center; justify-content: center; gap: 10px; text-align: center; overflow-y: auto; }
 #title .top-right { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 12px); right: 16px; }
+.news-btn { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 6px); left: 12px; width: 58px; height: 52px; padding: 0; border: 0; background: none; z-index: 2; }
+.news-btn img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 4px 10px rgba(0, 0, 0, .5)); }
+.news-btn .dot { top: 2px; right: 2px; }
+.news-list { display: flex; flex-direction: column; gap: 14px; max-height: min(60vh, 520px); overflow-y: auto; text-align: left; }
+.news-item h3 { font-size: 16px; color: #4b2a1a; }
+.news-item .news-date { font-size: 12px; color: #6a4a2a; }
+.news-item.important h3::before { content: "重要 "; color: #b3263a; }
+.news-item ul { margin: 4px 0 0; padding-left: 1.2em; font-size: 14px; }
+.set-ver { margin: 0; font-size: 12px; color: #6a4a2a; text-align: center; }
 .logo { width: min(64vw, 300px, 36vh); filter: drop-shadow(0 10px 30px rgba(120, 60, 200, .6)); animation: float 6s ease-in-out infinite; }
 @keyframes float { 50% { transform: translateY(-8px); } }
 .game-name { font-size: clamp(28px, 7.4vw, 46px); letter-spacing: .08em; color: var(--gold-hi); text-shadow: 0 2px 0 #6b3a18, 0 0 22px rgba(255, 200, 110, .55); }
@@ -472,6 +481,7 @@ img { max-width: 100%; }
   <section class="screen" id="title" hidden>
     <canvas id="demo" aria-hidden="true"></canvas>
     <div class="top-right"><span class="chip"><img class="coin-ic" src="assets/coin.webp" alt="コイン"><span data-coins>0</span></span></div>
+    <button class="news-btn" id="m-news" aria-label="お知らせ"><img src="assets/letter.webp" alt=""><span class="dot" id="news-dot" hidden></span></button>
     <div class="brand">
       <img class="logo" src="assets/title_logo.webp" alt="">
       <h1 class="game-name">魔女のポーション工房</h1>
@@ -641,15 +651,15 @@ img { max-width: 100%; }
   <div id="toasts"></div>
 </div>
 
-<script src="engine.js?v=20261009023155" charset="utf-8"></script>
-<script src="data.js?v=20261009023155" charset="utf-8"></script>
-<script src="render.js?v=20261009023155" charset="utf-8"></script>
-<script src="audio.js?v=20261009023155" charset="utf-8"></script>
-<script src="store.js?v=20261009023155" charset="utf-8"></script>
-<script src="game.js?v=20261009023155" charset="utf-8"></script>
-<script src="mini.js?v=20261009023155" charset="utf-8"></script>
-<script src="gacha.js?v=20261009023155" charset="utf-8"></script>
-<script src="app.js?v=20261009023155" charset="utf-8"></script>
+<script src="engine.js?v=20261009023638" charset="utf-8"></script>
+<script src="data.js?v=20261009023638" charset="utf-8"></script>
+<script src="render.js?v=20261009023638" charset="utf-8"></script>
+<script src="audio.js?v=20261009023638" charset="utf-8"></script>
+<script src="store.js?v=20261009023638" charset="utf-8"></script>
+<script src="game.js?v=20261009023638" charset="utf-8"></script>
+<script src="mini.js?v=20261009023638" charset="utf-8"></script>
+<script src="gacha.js?v=20261009023638" charset="utf-8"></script>
+<script src="app.js?v=20261009023638" charset="utf-8"></script>
 <script>
   (function () {
     // iPhone / iPad home-screen app only (navigator.standalone exists only there)

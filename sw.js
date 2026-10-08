@@ -1,10 +1,10 @@
 /* Offline support: the page and scripts are fetched fresh when online (so updates arrive),
    images and data are served from the cache after the first load. */
-const VERSION = '20261009023155';
+const VERSION = '20261009023638';
 const CACHE = 'potion-' + VERSION;
 const CORE = [
   './', 'index.html', 'engine.js', 'data.js', 'render.js', 'audio.js', 'store.js', 'game.js', 'mini.js', 'gacha.js', 'app.js',
-  'levels.json', 'shapes.json', 'manifest.webmanifest',
+  'levels.json', 'shapes.json', 'news.json', 'manifest.webmanifest',
   'assets/bg_portrait.webp', 'assets/bg_landscape.webp', 'assets/title_logo.webp', 'assets/bottle_back.webp',
   'assets/bottle_front.webp', 'assets/bottle_mask.png', 'assets/bottle_cap.webp', 'assets/panel_frame.webp',
 ];

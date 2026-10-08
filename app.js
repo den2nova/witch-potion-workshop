@@ -178,6 +178,7 @@
     renderTitle();
     show('title');
     setTimeout(loginBonus, 900);
+    loadNews().then(() => setTimeout(autoNews, 1600));
     demoLoop();
     window.addEventListener('pagehide', () => { saveCurrent(true); S.flush(); });
     document.addEventListener('visibilitychange', () => { if (document.hidden) { saveCurrent(true); S.flush(); } });
@@ -319,6 +320,40 @@
       if (p >= 1) { E.pour(s, a.from, a.to); Demo.anim = null; Demo.next = t + 900; }
     }
     R.dpr = odpr;
+  }
+
+  // ---------------- news (news.json: the app version and notices shown from the letter on the title screen) ----------------
+  const news = { version: null, items: [] };
+  async function loadNews() {
+    try {
+      const r = await fetch('news.json', { cache: 'no-cache' });
+      const d = await r.json();
+      news.version = d.version;
+      news.items = d.news || [];
+    } catch (e) { /* offline with nothing cached: no notices this time */ }
+    updateNewsDot();
+  }
+  const newsRead = () => S.p.newsRead || (S.p.newsRead = []);
+  const unreadNews = () => news.items.filter((n) => !newsRead().includes(n.id));
+  function updateNewsDot() { const d = $('#news-dot'); if (d) d.hidden = !unreadNews().length; }
+  function openNews() {
+    const list = h('div', { class: 'news-list' }, news.items.length ? news.items.map((n) => h('article', { class: 'news-item' + (n.important ? ' important' : '') },
+      h('h3', { text: n.title }),
+      h('div', { class: 'news-date', text: n.date }),
+      h('ul', null, (n.body || []).map((t) => h('li', { text: t }))))) : h('p', { class: 'panel-text', text: 'お知らせはまだありません。' }));
+    Snd.play('letter');
+    dialog({ title: 'お知らせ', body: h('div', null, h('div', { class: 'letter' }, img('letter', 'letter-img')), list), buttons: [{ label: '閉じる', primary: true }] });
+    news.items.forEach((n) => { if (!newsRead().includes(n.id)) newsRead().push(n.id); });
+    S.changed();
+    updateNewsDot();
+  }
+  App.openNews = openNews;
+  // an unread important notice opens by itself once the title screen is free (after the login bonus letter)
+  function autoNews(tries) {
+    if (!unreadNews().some((n) => n.important)) return;
+    if (App.screen !== 'title') return;
+    if (App.dialogOpen) { if ((tries || 0) < 120) setTimeout(() => autoNews((tries || 0) + 1), 500); return; }
+    openNews();
   }
 
   // ---------------- login bonus ----------------
@@ -853,7 +888,8 @@
       h('p', { class: 'set-note', text: '進捗はこの端末のブラウザに保存されます。ブラウザのデータを消すと進捗も消えます。別の端末とは共有されません。' }),
       inGame ? h('div', { class: 'panel-actions' },
         h('button', { class: 'btn', onclick: () => { d.close(); saveCurrent(true); renderTitle(); show('title'); } }, 'ホームに戻る')) : null,
-      !inGame ? h('button', { class: 'btn danger small reset', onclick: () => resetFlow() }, '進捗をリセット') : null);
+      !inGame ? h('button', { class: 'btn danger small reset', onclick: () => resetFlow() }, '進捗をリセット') : null,
+      h('p', { class: 'set-ver', text: 'バージョン ' + (news.version || '—') }));
     const d = dialog({ title: '設定', body, cls: 'settings-panel' });
   }
   App.openSettings = openSettings;
@@ -1361,6 +1397,7 @@
     on('#m-shop', menu.shop);
     on('#m-collection', menu.collection);
     on('#m-achievements', menu.achievements);
+    on('#m-news', openNews);
     on('#m-gacha', menu.gacha);
     $$('[data-ctab]').forEach((t) => t.addEventListener('click', () => { collTab = t.dataset.ctab; renderCollection(); }));
     on('#m-settings', menu.settings);
