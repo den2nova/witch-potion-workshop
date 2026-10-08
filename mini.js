@@ -180,7 +180,7 @@
         if (G.t <= 0) {
           G.t = 0; G.over = true;
           const best = S.setBest('cauldron', G.score);
-          const coins = Math.min(120, 10 + Math.floor(G.score / 10));
+          const coins = Math.min(180, 20 + Math.floor(G.score / 8));
           setTimeout(() => result('大釜キャッチ', ['得点 ' + G.score + (best ? '(自己ベスト更新!)' : ''), '最高 ' + S.best('cauldron')], coins, () => M.start('cauldron')), 400);
         }
       }
@@ -338,7 +338,7 @@
       Snd.play('bump');
       if (G.chimneys) S.count('chimneys', G.chimneys);
       const best = S.setBest('broom', G.score);
-      const coins = Math.min(120, 10 + G.score * 5);
+      const coins = Math.min(180, 20 + G.score * 6);
       setTimeout(() => result('ほうきの夜間飛行', ['得点 ' + G.score + (best ? '(自己ベスト更新!)' : ''), '抜けた煙突 ' + G.chimneys + '本'], coins, () => M.start('broom')), 500);
     }
     G.onQuit = () => { if (!G.over && G.chimneys) S.count('chimneys', G.chimneys); };

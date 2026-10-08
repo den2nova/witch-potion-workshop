@@ -135,8 +135,8 @@
       { id: 'cauldron', type: 'bg', name: '月夜の大釜', price: null, how: '図鑑コンプリートの報酬', img: 'bg_cauldron' },
     ],
     COIN: {
-      clearBase: 20, perStar: 10, giantBonus: 50, replay: 10, starUp: 10,
-      cleanTable: 10, dailyClear: 40, trophyFull: 400, seriesDone: 300, collectionDone: 1000,
+      clearBase: 30, perStar: 10, giantBonus: 70, replay: 15, starUp: 10,
+      cleanTable: 10, dailyClear: 60, trophyFull: 400, seriesDone: 300, collectionDone: 1000,
     },
     LOGIN_BONUS: [
       { coins: 30 }, { coins: 40 }, { coins: 50 }, { undo: 1 }, { coins: 60 }, { coins: 80 }, { coins: 200, shuffle: 1 },
@@ -181,7 +181,7 @@
     'blind+curtain': { title: 'ブラインド × カーテン', body: 'カーテンが開くと、その瓶の一番上の色だけが見えるようになります。' },
     shop: { title: '魔女の道具屋', body: 'パズルやミニゲームで貯めたコインで、アイテムや着せ替えを買えます。' },
     gacha: { title: '星の福引き', body: '1回50コイン、10連は500コインで、図鑑に飾る小物が当たります。10連はR以上が1つ確定。1回ごとに1ポイントたまり、100ポイントで好きなレアリティの未所持アイテムと交換できます。持っている物が出たときはコインに戻ります。' },
-    minigame: { title: 'ミニゲーム', body: '気分転換に遊んでコインを稼げます。何度でも遊べて、失敗しても最低10枚もらえます。' },
+    minigame: { title: 'ミニゲーム', body: '気分転換に遊んでコインを稼げます。何度でも遊べて、失敗しても最低20枚もらえます。' },
     daily: { title: 'デイリーチャレンジ', body: '1日1問。クリアするとその月のトロフィーにポーションが注がれ、1か月分そろうと満杯になります。' },
     cosmetics: { title: '着せ替え', body: '瓶と背景のデザインを変えられます。買う前にプレビューできます。' },
   };
