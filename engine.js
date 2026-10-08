@@ -239,6 +239,29 @@
     return b.layers.map((l) => l.c).join(',') !== before;
   }
 
+  // every distinct order of the bottle's same-colour blocks, other than the current one
+  function shuffleOptions(s, i) {
+    const b = s.bottles[i];
+    const key = (ls) => ls.map((l) => l.c).join(',');
+    const blocks = [];
+    b.layers.forEach((l) => {
+      const last = blocks[blocks.length - 1];
+      if (last && last[0].c === l.c) last.push(l); else blocks.push([l]);
+    });
+    const seen = new Set([key(b.layers)]);
+    const out = [];
+    const perm = (rest, acc) => {
+      if (!rest.length) {
+        const ls = [].concat(...acc), k = key(ls);
+        if (!seen.has(k)) { seen.add(k); out.push(ls); }
+        return;
+      }
+      rest.forEach((blk, j) => perm(rest.slice(0, j).concat(rest.slice(j + 1)), acc.concat([blk])));
+    };
+    perm(blocks, []);
+    return out;
+  }
+
   function addBottle(s) {
     s.bottles.push({ layers: [], curtain: null, extra: true });
     s.added++;
@@ -439,7 +462,7 @@
 
   const Engine = {
     mulberry32, shuffleArr, clone, fromLevel, top, isLocked, isComplete, topRun, zoneColor,
-    canPour, pourAmount, pour, undo, isSolved, legalMoves, isPointless, shuffle, canShuffleBottle, shuffleBottle, addBottle,
+    canPour, pourAmount, pour, undo, isSolved, legalMoves, isPointless, shuffle, canShuffleBottle, shuffleBottle, shuffleOptions, addBottle,
     completedCount, updateCurtains, solve,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = Engine;

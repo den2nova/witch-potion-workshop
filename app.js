@@ -532,15 +532,22 @@
   }
 
   let worker = null;
-  function checkSolvable(state) {
+  // resolves true / false, or null when the check could not finish in time (the busy worker is then dropped,
+  // so a slow search never queues up behind the next one)
+  function checkSolvable(state, ms) {
     return new Promise((resolve) => {
       try {
         if (!worker) worker = new Worker('solver-worker.js');
+        const w = worker;
         const id = Math.random();
-        const onMsg = (e) => { if (e.data.id === id) { worker.removeEventListener('message', onMsg); resolve(e.data.ok); } };
-        worker.addEventListener('message', onMsg);
-        worker.postMessage({ id, state: JSON.parse(JSON.stringify(state)), maxNodes: 60000, weight: 2.5 });
-        setTimeout(() => resolve(null), 6000);
+        let done = false;
+        const finish = (v) => { if (done) return; done = true; w.removeEventListener('message', onMsg); w.removeEventListener('error', onErr); resolve(v); };
+        const onMsg = (e) => { if (e.data.id === id) finish(e.data.ok); };
+        const onErr = () => { if (worker === w) { w.terminate(); worker = null; } finish(null); };
+        w.addEventListener('message', onMsg);
+        w.addEventListener('error', onErr);
+        w.postMessage({ id, state: JSON.parse(JSON.stringify(state)), maxNodes: 60000, weight: 2.5 });
+        setTimeout(() => { if (!done && worker === w) { w.terminate(); worker = null; } finish(null); }, ms || 2500);
       } catch (err) {
         // no worker: check on the main thread with a smaller budget
         const r = E.solve(state, 20000, 3);
@@ -573,18 +580,30 @@
     const g = App.game;
     const s = g.s;
     const rng = E.mulberry32((Date.now() & 0xffffff) ^ (s.moves * 7919) ^ (i * 104729));
+    // try each distinct new order of the bottle once, in random order, within a few seconds in total
+    const options = E.shuffleOptions(s, i);
+    for (let k = options.length - 1; k > 0; k--) { const j = Math.floor(rng() * (k + 1)); [options[k], options[j]] = [options[j], options[k]]; }
     $('#g-busy').hidden = false;
     let found = null;
-    for (let tries = 0; tries < 20; tries++) {
-      const c = E.clone(s);
-      if (!E.shuffleBottle(c, i, rng)) continue;
-      c.history = [];
-      E.updateCurtains(c);
-      const ok = E.isSolved(c) || await checkSolvable(c);
-      if (ok) { found = c; break; }
+    try {
+      const deadline = performance.now() + 6000;
+      for (const layers of options) {
+        const left = deadline - performance.now();
+        if (left < 300) break;
+        const c = E.clone(s);
+        c.bottles[i].layers = layers.map((l) => ({ c: l.c, h: l.h }));
+        c.bottles[i].layers[c.bottles[i].layers.length - 1].h = false;
+        c.history = [];
+        E.updateCurtains(c);
+        const ok = E.isSolved(c) || await checkSolvable(c, Math.min(2500, left));
+        if (ok) { found = c; break; }
+      }
+    } catch (err) {
+      found = null;
+    } finally {
+      $('#g-busy').hidden = true;
     }
-    $('#g-busy').hidden = true;
-    if (!found) { toast('この瓶はいま混ぜられません(アイテムは減っていません)'); return; }
+    if (!found) { toast('この瓶をいま混ぜると解けなくなるため、混ぜられませんでした(アイテムは減っていません)'); return; }
     s.bottles[i].layers = found.bottles[i].layers;
     s.history = [];
     s.shuffled = true;
