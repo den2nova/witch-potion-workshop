@@ -1140,7 +1140,7 @@
     const sw = Math.max(0, 1 - (performance.now() - detail.swirl) / 1200);
     const segs = rec.zones.map((c, z) => ({ f0: z / total, f1: (z + 1) / total, color: GD.COLORS[c].hex }));
     const odpr = R.dpr; R.dpr = dpr;
-    R.drawVessel(ctx, v, rect, segs, { variant: gi.v, wave: 2 + sw * 8, time: t * (1 + sw * 3), noLines: true, shine: sw * 0.4, stopper: true });
+    R.drawVessel(ctx, v, rect, segs, { variant: gi.v, wave: 2 + sw * 8, time: t * (1 + sw * 3), noLines: true, shine: sw * 0.4, stopper: true, rich: true });
     if (gi.v) {
       const im = R.get('giant_trim_' + gi.v);
       if (im) {

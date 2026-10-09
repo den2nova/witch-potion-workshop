@@ -307,6 +307,7 @@
       const pulse = 0.5 + 0.5 * Math.sin(t / 380);
       R.drawVessel(ctx, g, Board.giantRect, giantSegs(extra), {
         stopper: s.giant.filled >= s.giant.capacity ? giantStopper() : null,
+        rich: true,
         variant: s.giant.variant, wave: 1.6, time: t / 1000,
         glow: Board.selected !== null && E.canPour(s, Board.selected, 'g') ? 1.2 + pulse * 0.6 : 0,
         shine: Board.giantShine ? Board.giantShine() : 0,

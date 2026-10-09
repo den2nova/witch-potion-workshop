@@ -151,6 +151,42 @@
     return fogPattern;
   }
 
+  // giant bottles: the liquid's own colour deepens towards the bottom, a soft glow sits in its middle and
+  // a bright line marks the surface (drawn only on the filled part, under the glass and the colour marks)
+  function hexRgb(hex) { const n = parseInt(hex.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+  function richLiquid(x, g, W, H, ordered, dpr) {
+    const solid = ordered.filter((s) => !s.ghost && !s.hidden && s.color);
+    if (!solid.length) return;
+    const top = Math.max(...solid.map((s) => s.f1));
+    const sy = R.yForFraction(g, top) * H, by = g.bottom * H;
+    if (by - sy < 4) return;
+    const [r, gg, b] = hexRgb(solid[0].color);
+    x.save();
+    x.beginPath(); x.rect(0, sy, W, H - sy); x.clip();
+    // depth: multiply by the colour itself, so the lower part gets deeper and more saturated, not grey
+    x.globalCompositeOperation = 'multiply';
+    const dg = x.createLinearGradient(0, sy, 0, by);
+    dg.addColorStop(0, 'rgba(255,255,255,1)');
+    dg.addColorStop(0.35, 'rgba(255,255,255,1)');
+    dg.addColorStop(1, `rgba(${r},${gg},${b},1)`);
+    x.fillStyle = dg; x.fillRect(0, sy, W, by - sy + 2 * dpr);
+    // glow: a lighter tint of the same colour (not white), so the liquid stays vivid
+    x.globalCompositeOperation = 'screen';
+    const lt = (c) => Math.round(c + (255 - c) * 0.35);
+    const cy = sy + (by - sy) * 0.42;
+    const rg = x.createRadialGradient(W / 2, cy, 0, W / 2, cy, W * 0.42);
+    rg.addColorStop(0, `rgba(${lt(r)},${lt(gg)},${lt(b)},0.38)`);
+    rg.addColorStop(1, `rgba(${lt(r)},${lt(gg)},${lt(b)},0)`);
+    x.fillStyle = rg; x.fillRect(0, sy, W, by - sy);
+    // surface line
+    const sg = x.createLinearGradient(0, sy, 0, sy + 12 * dpr);
+    sg.addColorStop(0, 'rgba(255,248,225,0.85)');
+    sg.addColorStop(0.3, `rgba(${lt(r)},${lt(gg)},${lt(b)},0.35)`);
+    sg.addColorStop(1, 'rgba(255,255,255,0)');
+    x.fillStyle = sg; x.fillRect(0, sy, W, 12 * dpr);
+    x.restore();
+  }
+
   /*
    * Draw a vessel into ctx.
    * rect: {x, y, w, h} in CSS px (image box).
@@ -220,6 +256,7 @@
       gr.addColorStop(1, 'rgba(10,0,30,0.55)');
       x.fillStyle = gr;
       x.fillRect(0, 0, W, H);
+      if (opts.rich && !angle) richLiquid(x, g, W, H, ordered, dpr);
       // layer separation lines and marks
       if (!opts.noLines) {
         x.globalCompositeOperation = 'source-atop';
