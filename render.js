@@ -29,10 +29,12 @@
 
   // vessel = one bottle design (back image, front image, liquid mask, geometry)
   R.loadVessel = function (key) {
+    const g = R.shapes && R.shapes[key];
     return Promise.all([
       R.load(key + '_back'),
       R.load(key + '_front'),
       R.load(key + '_mask', key + '_mask.png'),
+      g && g.stopperBox ? R.load(key + '_stopper') : null,
     ]).then(() => R.vessel(key));
   };
   R.vessel = function (key) {
@@ -42,7 +44,7 @@
     const mask = R.get(key + '_mask');
     if (!g || !back || !front || !mask) return null;
     if (!g._cum) prepareGeometry(g);
-    return { key, geo: g, back, front, mask, aspect: g.w / g.h };
+    return { key, geo: g, back, front, mask, aspect: g.w / g.h, stopper: g.stopperBox ? R.get(key + '_stopper') : null };
   };
 
   // cumulative liquid volume from the bottom up to the fill cap
@@ -300,6 +302,12 @@
       ctx.restore();
     }
     ctx.drawImage(front, 0, 0, rect.w, rect.h);
+    // the bottle's own stopper (giant bottles): opts.stopper = true, or { dy, alpha } while it drops on
+    if (opts.stopper && v.stopper && v.geo.stopperBox) {
+      const b = v.geo.stopperBox, st = opts.stopper === true ? {} : opts.stopper;
+      ctx.globalAlpha = (opts.alpha != null ? opts.alpha : 1) * (st.alpha != null ? st.alpha : 1);
+      ctx.drawImage(v.stopper, b[0] * rect.w, b[1] * rect.h - (st.dy || 0), (b[2] - b[0]) * rect.w, (b[3] - b[1]) * rect.h);
+    }
     ctx.restore();
   };
 

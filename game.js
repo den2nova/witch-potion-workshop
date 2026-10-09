@@ -306,12 +306,13 @@
       const g = Board.giant;
       const pulse = 0.5 + 0.5 * Math.sin(t / 380);
       R.drawVessel(ctx, g, Board.giantRect, giantSegs(extra), {
+        stopper: s.giant.filled >= s.giant.capacity ? giantStopper() : null,
         variant: s.giant.variant, wave: 1.6, time: t / 1000,
         glow: Board.selected !== null && E.canPour(s, Board.selected, 'g') ? 1.2 + pulse * 0.6 : 0,
         shine: Board.giantShine ? Board.giantShine() : 0,
       });
       drawTrim(ctx, g, Board.giantRect, s.giant.variant);
-      if (s.giant.filled >= s.giant.capacity) drawCork(ctx, 'g', Board.giantRect, g);
+
     }
 
     // bottles
@@ -384,6 +385,15 @@
     ctx.globalAlpha = alpha;
     ctx.drawImage(cap, m.x - w / 2, y, w, h);
     ctx.restore();
+  }
+
+  // the giant's own cork drops in when the giant bottle is full
+  function giantStopper() {
+    const t0 = Board.corks.g;
+    if (!t0) return true;
+    const p = clamp((now() - t0) / 450, 0, 1);
+    if (p >= 1) { delete Board.corks.g; return true; }
+    return { dy: (1 - easeOut(p)) * 70, alpha: clamp(p * 3, 0, 1) };
   }
 
   // the skin's own stopper (cut off its artwork) drops onto the open neck, in front of the glass
@@ -641,6 +651,7 @@
     if (giant) {
       const r = Board.giantRect;
       Board.corks.g = now();
+      Snd.play('cork');
       Board.giantShine = () => {
         const p = (now() - Board.bounce) / 2000;
         return p < 1 ? Math.sin(p * Math.PI) * 0.7 : 0;

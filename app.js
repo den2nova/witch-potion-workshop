@@ -408,7 +408,7 @@
       if (giant) {
         const gi = giantInfo(giantIndex(n));
         // the bottle is shown only after it has been filled; before that its shape stays a secret
-        if (rec) cell.append(img('giant_' + gi.s + '_back', 'lvl-giant'));
+        if (rec) cell.append(img('giant_' + gi.s + '_icon', 'lvl-giant'));
         else cell.append(h('span', { class: 'lvl-giant-q', 'aria-hidden': 'true' }));
       }
       cell.append(h('span', { class: 'lvl-n', text: n }));
@@ -743,7 +743,7 @@
         h('dt', { text: '目安の手数' }), h('dd', { text: lv.par }),
         coins ? [h('dt', { text: 'コイン' }), h('dd', { class: 'coin-dd' }, img('coin', 'coin-ic'), '+' + coins)] : null),
       notes.map((n) => h('p', { class: 'note', text: n })),
-      registered ? h('div', { class: 'reg' }, img('giant_' + giantInfo(registered.idx).s + '_back', 'reg-img'),
+      registered ? h('div', { class: 'reg' }, img('giant_' + giantInfo(registered.idx).s + '_icon', 'reg-img'),
         h('div', null, h('p', { class: 'reg-title', text: registered.first ? '図鑑に登録しました' : '図鑑の記録を更新しました' }),
           h('p', { class: 'reg-name', text: bottleName(registered.idx).name + '「' + bottleName(registered.idx).potion + '」' }),
           registered.newShape ? h('p', { class: 'reg-desc', text: bottleName(registered.idx).desc }) : null)) : null);
@@ -1063,7 +1063,7 @@
     const total = zones.length;
     const segs = zones.map((c, z) => ({ f0: z / total, f1: (z + 1) / total, color: GD.COLORS[c].hex }));
     ctx.clearRect(0, 0, cv.width, cv.height);
-    R.drawVessel(ctx, v, { x: 0, y: 0, w: cv.width, h: cv.height }, segs, { variant: gi.v, noLines: true, wave: opts && opts.wave, time: opts && opts.time });
+    R.drawVessel(ctx, v, { x: 0, y: 0, w: cv.width, h: cv.height }, segs, { variant: gi.v, noLines: true, wave: opts && opts.wave, time: opts && opts.time, stopper: true });
     R.dpr = dpr;
   }
   async function drawTrophy(cv, month, frac, year) {
@@ -1140,7 +1140,7 @@
     const sw = Math.max(0, 1 - (performance.now() - detail.swirl) / 1200);
     const segs = rec.zones.map((c, z) => ({ f0: z / total, f1: (z + 1) / total, color: GD.COLORS[c].hex }));
     const odpr = R.dpr; R.dpr = dpr;
-    R.drawVessel(ctx, v, rect, segs, { variant: gi.v, wave: 2 + sw * 8, time: t * (1 + sw * 3), noLines: true, shine: sw * 0.4 });
+    R.drawVessel(ctx, v, rect, segs, { variant: gi.v, wave: 2 + sw * 8, time: t * (1 + sw * 3), noLines: true, shine: sw * 0.4, stopper: true });
     if (gi.v) {
       const im = R.get('giant_trim_' + gi.v);
       if (im) {
