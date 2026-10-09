@@ -141,6 +141,9 @@ img { max-width: 100%; }
 .news-item .news-date { font-size: 12px; color: #6a4a2a; }
 .news-item.important h3::before { content: "重要 "; color: #b3263a; }
 .news-item ul { margin: 4px 0 0; padding-left: 1.2em; font-size: 14px; }
+.note.par { display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 700; color: #8a4b00; animation: parglow 1.6s ease-in-out .9s 2 both; }
+.note.par .coin-ic { width: 20px; height: 20px; }
+@keyframes parglow { 0% { opacity: 0; transform: scale(.8); } 30% { opacity: 1; transform: scale(1.08); text-shadow: 0 0 12px rgba(255, 200, 80, .9); } 100% { opacity: 1; transform: scale(1); } }
 .set-ver { margin: 0; font-size: 12px; color: #6a4a2a; text-align: center; }
 .logo { width: min(64vw, 300px, 36vh); filter: drop-shadow(0 10px 30px rgba(120, 60, 200, .6)); animation: float 6s ease-in-out infinite; }
 @keyframes float { 50% { transform: translateY(-8px); } }
@@ -666,15 +669,15 @@ img { max-width: 100%; }
   <div id="toasts"></div>
 </div>
 
-<script src="engine.js?v=20261010004713" charset="utf-8"></script>
-<script src="data.js?v=20261010004713" charset="utf-8"></script>
-<script src="render.js?v=20261010004713" charset="utf-8"></script>
-<script src="audio.js?v=20261010004713" charset="utf-8"></script>
-<script src="store.js?v=20261010004713" charset="utf-8"></script>
-<script src="game.js?v=20261010004713" charset="utf-8"></script>
-<script src="mini.js?v=20261010004713" charset="utf-8"></script>
-<script src="gacha.js?v=20261010004713" charset="utf-8"></script>
-<script src="app.js?v=20261010004713" charset="utf-8"></script>
+<script src="engine.js?v=20261010005515" charset="utf-8"></script>
+<script src="data.js?v=20261010005515" charset="utf-8"></script>
+<script src="render.js?v=20261010005515" charset="utf-8"></script>
+<script src="audio.js?v=20261010005515" charset="utf-8"></script>
+<script src="store.js?v=20261010005515" charset="utf-8"></script>
+<script src="game.js?v=20261010005515" charset="utf-8"></script>
+<script src="mini.js?v=20261010005515" charset="utf-8"></script>
+<script src="gacha.js?v=20261010005515" charset="utf-8"></script>
+<script src="app.js?v=20261010005515" charset="utf-8"></script>
 <script>
   (function () {
     // iPhone / iPad home-screen app only (navigator.standalone exists only there)

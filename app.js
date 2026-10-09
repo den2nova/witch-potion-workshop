@@ -674,10 +674,14 @@
     const notes = [];
     S.p.current = null;
     let registered = null;
+    let parNote = 0;
     if (g.daily) {
       const prev = S.p.daily[g.daily];
       if (!prev) { coins += C.COIN.dailyClear; }
-      S.p.daily[g.daily] = { s: Math.max(stars, prev ? prev.s : 0) };
+      // clearing within the target moves pays a bonus once per day's puzzle
+      const parNow = s.moves <= lv.par && !(prev && prev.p);
+      if (parNow) { coins += C.COIN.parDaily; parNote = C.COIN.parDaily; }
+      S.p.daily[g.daily] = { s: Math.max(stars, prev ? prev.s : 0), p: (prev && prev.p) || (s.moves <= lv.par ? 1 : 0) };
       // trophy
       const ym = g.daily.slice(0, 7);
       const [y, m] = ym.split('-').map(Number);
@@ -700,6 +704,12 @@
         if (stars > prev.s) coins += (stars - prev.s) * C.COIN.starUp;
         S.p.lv[g.n] = { s: Math.max(prev.s, stars), ni: prev.ni || noItem };
       }
+      // clearing within the target moves pays a bonus once per level (also when it is reached on a replay)
+      if (s.moves <= lv.par && !(prev && prev.p)) {
+        const bonus = lv.k.includes('giant') ? C.COIN.parGiant : C.COIN.parBonus;
+        coins += bonus; parNote = bonus;
+      }
+      if (s.moves <= lv.par || (prev && prev.p)) S.p.lv[g.n].p = 1;
       if (lv.g) {
         const idx = giantIndex(g.n);
         const had = S.p.coll[idx];
@@ -711,6 +721,7 @@
     }
     if (coins) S.grant({ coins }, g.daily ? 'デイリー' : 'レベル' + g.n);
     S.changed({ soon: true });
+    if (parNote) notes.unshift({ par: '目安の手数でクリア! +' + parNote });
     showClear(stars, coins, notes, registered);
   }
 
@@ -742,7 +753,7 @@
         h('dt', { text: '手数' }), h('dd', { text: g.s.moves }),
         h('dt', { text: '目安の手数' }), h('dd', { text: lv.par }),
         coins ? [h('dt', { text: 'コイン' }), h('dd', { class: 'coin-dd' }, img('coin', 'coin-ic'), '+' + coins)] : null),
-      notes.map((n) => h('p', { class: 'note', text: n })),
+      notes.map((n) => (n.par ? h('p', { class: 'note par' }, img('coin', 'coin-ic'), n.par) : h('p', { class: 'note', text: n }))),
       registered ? h('div', { class: 'reg' }, img('giant_' + giantInfo(registered.idx).s + '_icon', 'reg-img'),
         h('div', null, h('p', { class: 'reg-title', text: registered.first ? '図鑑に登録しました' : '図鑑の記録を更新しました' }),
           h('p', { class: 'reg-name', text: bottleName(registered.idx).name + '「' + bottleName(registered.idx).potion + '」' }),
