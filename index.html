@@ -50,11 +50,10 @@ body {
   -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
 }
 #stage { position: fixed; top: 0; left: 0; right: 0; bottom: 0; overflow: hidden; }
-/* Home-screen app on iPhone: the page area can stop short of the bottom edge, so size the stage
-   to the full screen (set from script as --app-h) instead of trusting the layout viewport. */
-@media (display-mode: standalone), (display-mode: fullscreen) {
-  #stage { bottom: auto; height: max(100vh, calc(100% + env(safe-area-inset-top, 0px)), var(--app-h, 0px)); }
-}
+/* Installed apps on Android and other browsers keep the plain fixed stage (top 0 to bottom 0 of the visible
+   window). An earlier rule sized the stage by 100vh / 100% + the top inset for every installed app, which on
+   Android made it taller than the window and pushed the item toolbar off the bottom. Only the iPhone
+   home-screen app below needs the full-screen height. */
 /* iPhone home-screen app: the window is shorter than the screen (762 vs 812) and nothing fixed-position is drawn
    below it, so the root and the stage are laid out at the full screen height instead (tested on device). */
 html.standalone, html.standalone body { height: var(--app-h, 100vh); overflow: hidden; }
@@ -669,15 +668,15 @@ img { max-width: 100%; }
   <div id="toasts"></div>
 </div>
 
-<script src="engine.js?v=20261010005722" charset="utf-8"></script>
-<script src="data.js?v=20261010005722" charset="utf-8"></script>
-<script src="render.js?v=20261010005722" charset="utf-8"></script>
-<script src="audio.js?v=20261010005722" charset="utf-8"></script>
-<script src="store.js?v=20261010005722" charset="utf-8"></script>
-<script src="game.js?v=20261010005722" charset="utf-8"></script>
-<script src="mini.js?v=20261010005722" charset="utf-8"></script>
-<script src="gacha.js?v=20261010005722" charset="utf-8"></script>
-<script src="app.js?v=20261010005722" charset="utf-8"></script>
+<script src="engine.js?v=20261010011058" charset="utf-8"></script>
+<script src="data.js?v=20261010011058" charset="utf-8"></script>
+<script src="render.js?v=20261010011058" charset="utf-8"></script>
+<script src="audio.js?v=20261010011058" charset="utf-8"></script>
+<script src="store.js?v=20261010011058" charset="utf-8"></script>
+<script src="game.js?v=20261010011058" charset="utf-8"></script>
+<script src="mini.js?v=20261010011058" charset="utf-8"></script>
+<script src="gacha.js?v=20261010011058" charset="utf-8"></script>
+<script src="app.js?v=20261010011058" charset="utf-8"></script>
 <script>
   (function () {
     // iPhone / iPad home-screen app only (navigator.standalone exists only there)
