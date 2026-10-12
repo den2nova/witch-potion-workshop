@@ -154,7 +154,8 @@
   // giant bottles: the liquid's own colour deepens towards the bottom, a soft glow sits in its middle and
   // a bright line marks the surface (drawn only on the filled part, under the glass and the colour marks)
   function hexRgb(hex) { const n = parseInt(hex.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
-  function richLiquid(x, g, W, H, ordered, dpr) {
+  const hash = (i) => { const v = Math.sin(i * 127.1) * 43758.5453; return v - Math.floor(v); };
+  function richLiquid(x, g, W, H, ordered, dpr, sparkle) {
     const solid = ordered.filter((s) => !s.ghost && !s.hidden && s.color);
     if (!solid.length) return;
     const top = Math.max(...solid.map((s) => s.f1));
@@ -166,8 +167,10 @@
     // depth: multiply by the colour itself, so the lower part gets deeper and more saturated, not grey
     x.globalCompositeOperation = 'multiply';
     const dg = x.createLinearGradient(0, sy, 0, by);
-    dg.addColorStop(0, 'rgba(255,255,255,1)');
-    dg.addColorStop(0.35, 'rgba(255,255,255,1)');
+    // trophies: the whole liquid is a little deeper first, so the glow and sparkles read as light, not fade
+    const tint = sparkle != null ? `rgba(${255 - Math.round((255 - r) * 0.35)},${255 - Math.round((255 - gg) * 0.35)},${255 - Math.round((255 - b) * 0.35)},1)` : 'rgba(255,255,255,1)';
+    dg.addColorStop(0, tint);
+    dg.addColorStop(sparkle != null ? 0.1 : 0.35, tint);
     dg.addColorStop(1, `rgba(${r},${gg},${b},1)`);
     x.fillStyle = dg; x.fillRect(0, sy, W, by - sy + 2 * dpr);
     // glow: a lighter tint of the same colour (not white), so the liquid stays vivid
@@ -175,15 +178,41 @@
     const lt = (c) => Math.round(c + (255 - c) * 0.35);
     const cy = sy + (by - sy) * 0.42;
     const rg = x.createRadialGradient(W / 2, cy, 0, W / 2, cy, W * 0.42);
-    rg.addColorStop(0, `rgba(${lt(r)},${lt(gg)},${lt(b)},0.38)`);
-    rg.addColorStop(1, `rgba(${lt(r)},${lt(gg)},${lt(b)},0)`);
+    // small trophies are mostly "middle", so their glow stays faint to keep the colour vivid
+    // trophies glow in the colour itself (not a paler tint) so the small liquid stays vivid
+    const gc = sparkle != null ? [r, gg, b] : [lt(r), lt(gg), lt(b)];
+    rg.addColorStop(0, `rgba(${gc[0]},${gc[1]},${gc[2]},${sparkle != null ? 0.32 : 0.38})`);
+    rg.addColorStop(1, `rgba(${gc[0]},${gc[1]},${gc[2]},0)`);
     x.fillStyle = rg; x.fillRect(0, sy, W, by - sy);
     // surface line
-    const sg = x.createLinearGradient(0, sy, 0, sy + 12 * dpr);
+    const sh = (sparkle != null ? 5 : 12) * dpr;
+    const sg = x.createLinearGradient(0, sy, 0, sy + sh);
     sg.addColorStop(0, 'rgba(255,248,225,0.85)');
     sg.addColorStop(0.3, `rgba(${lt(r)},${lt(gg)},${lt(b)},0.35)`);
     sg.addColorStop(1, 'rgba(255,255,255,0)');
-    x.fillStyle = sg; x.fillRect(0, sy, W, 12 * dpr);
+    x.fillStyle = sg; x.fillRect(0, sy, W, sh);
+    // sparkle (trophies): a warmer glow in the middle and gold stars that drift up and twinkle.
+    // sparkle = time in seconds (null = no sparkle); still stars when the time does not move
+    if (sparkle != null) {
+      const t = sparkle;
+      const gl = x.createRadialGradient(W / 2, cy, 0, W / 2, cy, W * 0.42);
+      gl.addColorStop(0, 'rgba(255,215,140,0.1)');
+      gl.addColorStop(1, 'rgba(255,225,160,0)');
+      x.fillStyle = gl; x.fillRect(0, sy, W, by - sy);
+      const span = by - sy;
+      const count = Math.round(Math.min(40, Math.max(8, W * span / (dpr * dpr * 900))));
+      for (let i = 0; i < count; i++) {
+        const px = W * (0.12 + hash(i) * 0.76);
+        const py = sy + (((hash(i + 50) * span - t * 10 * dpr * (0.5 + hash(i + 9))) % span) + span) % span;
+        const a = 0.25 + Math.max(0, Math.sin(t * 2.2 + i * 1.7)) * 0.75;
+        const r = (1.2 + hash(i + 20) * 2.8) * dpr * Math.max(0.6, W / (dpr * 160));
+        x.fillStyle = `rgba(255,212,110,${a.toFixed(3)})`;
+        x.beginPath();
+        x.moveTo(px, py - r * 2); x.lineTo(px + r * 0.45, py - r * 0.45); x.lineTo(px + r * 2, py); x.lineTo(px + r * 0.45, py + r * 0.45);
+        x.lineTo(px, py + r * 2); x.lineTo(px - r * 0.45, py + r * 0.45); x.lineTo(px - r * 2, py); x.lineTo(px - r * 0.45, py - r * 0.45);
+        x.fill();
+      }
+    }
     x.restore();
   }
 
@@ -256,7 +285,7 @@
       gr.addColorStop(1, 'rgba(10,0,30,0.55)');
       x.fillStyle = gr;
       x.fillRect(0, 0, W, H);
-      if (opts.rich && !angle) richLiquid(x, g, W, H, ordered, dpr);
+      if (opts.rich && !angle) richLiquid(x, g, W, H, ordered, dpr, opts.sparkle);
       // layer separation lines and marks
       if (!opts.noLines) {
         x.globalCompositeOperation = 'source-atop';

@@ -510,7 +510,7 @@
     afterMove() {
       const g = App.game;
       tutorialAfterMove();
-      if (E.legalMoves(g.s, true).length === 0) setTimeout(stuckDialog, 350);
+      checkStuck();
     },
     onSolved,
     onCurtainTap(c) {
@@ -568,6 +568,7 @@
     }
     updateToolbar();
     scheduleSave();
+    checkStuck();
   }
 
   // shuffle item: the player picks one small bottle, and only that bottle's layers are mixed
@@ -614,6 +615,7 @@
     updateToolbar();
     scheduleSave();
     if (E.isSolved(s)) B.celebrate(false);
+    else checkStuck();
   }
 
   function quickBuy(k) {
@@ -632,10 +634,37 @@
     });
   }
 
-  function stuckDialog() {
+  // stuck check after every move: no useful pour left at all, or (checked in the background) pours remain
+  // but no order of them can finish the board any more
+  let stuckWorker = null, stuckSeq = 0;
+  function boardKey(s) { return s.moves + ':' + s.bottles.map((b) => b.layers.map((l) => l.c).join(',')).join('|') + ':' + (s.giant ? s.giant.filled : ''); }
+  function checkStuck() {
     const g = App.game;
-    if (!g || App.screen !== 'game' || E.isSolved(g.s) || App.dialogOpen) return;
-    if (E.legalMoves(g.s, true).length) return;
+    if (!g || E.isSolved(g.s)) return;
+    const seq = ++stuckSeq;
+    const key = boardKey(g.s);
+    const still = () => App.game === g && seq === stuckSeq && boardKey(g.s) === key;
+    if (E.legalMoves(g.s, true).length === 0) { setTimeout(() => still() && stuckDialog(false, still), 350); return; }
+    const state = JSON.parse(JSON.stringify(Object.assign({}, g.s, { history: [] })));
+    const done = (v) => { if (v === false && still()) stuckDialog(true, still); };
+    try {
+      if (stuckWorker) stuckWorker.terminate();
+      stuckWorker = new Worker('solver-worker.js');
+      const w = stuckWorker;
+      w.onmessage = (e) => { if (w === stuckWorker) { stuckWorker = null; w.terminate(); } done(e.data.solvable); };
+      w.onerror = () => { if (w === stuckWorker) { stuckWorker = null; w.terminate(); } };
+      w.postMessage({ id: seq, state, maxNodes: 200000 });
+    } catch (err) {
+      // no worker: a smaller check on the main thread
+      setTimeout(() => { if (!still()) return; const r = E.solve(state, 20000, 2); done(r.path ? true : (r.exhausted ? false : null)); }, 400);
+    }
+  }
+  function stuckDialog(hasMoves, still, tries) {
+    const g = App.game;
+    if (!g || App.screen !== 'game' || E.isSolved(g.s)) return;
+    // another dialog (achievement, tutorial) is open: try again once it closes, as long as the board is unchanged
+    if (App.dialogOpen) { if ((tries || 0) < 120 && (!still || still())) setTimeout(() => stuckDialog(hasMoves, still, (tries || 0) + 1), 500); return; }
+    if (still && !still()) return;
     const btns = [];
     if (g.s.history.length) btns.push({ label: '一手戻す', onClick: () => useItem('undo') });
     btns.push({ label: 'シャッフル', onClick: () => useItem('shuffle') });
@@ -644,7 +673,7 @@
     const noItems = ['undo', 'shuffle', 'bottle'].every((k) => S.items(k) === 0);
     dialog({
       title: '手詰まりです',
-      body: h('div', null, h('p', { class: 'panel-text', text: '注げる組み合わせがありません。アイテムを使うか、最初からやり直しましょう。' }),
+      body: h('div', null, h('p', { class: 'panel-text', text: hasMoves ? 'まだ注げる瓶はありますが、この並びからはもうクリアできません。アイテムを使うか、最初からやり直しましょう。' : '注げる組み合わせがありません。アイテムを使うか、最初からやり直しましょう。' }),
         noItems ? h('div', { class: 'panel-actions' },
           h('button', { class: 'btn small', onclick: () => { saveCurrent(true); renderShop(); show('shop'); } }, 'ショップで買う'),
           h('button', { class: 'btn small', onclick: () => { saveCurrent(true); show('minis'); } }, 'ミニゲームで稼ぐ')) : null),
@@ -1077,7 +1106,8 @@
     R.drawVessel(ctx, v, { x: 0, y: 0, w: cv.width, h: cv.height }, segs, { variant: gi.v, noLines: true, wave: opts && opts.wave, time: opts && opts.time, stopper: true });
     R.dpr = dpr;
   }
-  async function drawTrophy(cv, month, frac, year) {
+  // trophies use the giant-bottle liquid plus drifting gold sparkles; `t` (seconds) animates them
+  async function drawTrophy(cv, month, frac, year, t) {
     const key = 'trophy_' + String(month).padStart(2, '0');
     const v = await R.loadVessel(key);
     if (!v) return;
@@ -1086,9 +1116,23 @@
     R.dpr = 1;
     ctx.clearRect(0, 0, cv.width, cv.height);
     const segs = frac > 0 ? [{ f0: 0, f1: frac, color: GD.TROPHY_COLORS[month - 1] }] : [];
-    R.drawVessel(ctx, v, { x: 0, y: 0, w: cv.width, h: cv.height }, segs, { noLines: true });
+    R.drawVessel(ctx, v, { x: 0, y: 0, w: cv.width, h: cv.height }, segs, { noLines: true, rich: true, sparkle: t || 0 });
     void year;
     R.dpr = dpr;
+  }
+  // the big trophy on the daily screen keeps twinkling while that screen is open
+  let trophyAnim = null, trophyLoop = false;
+  function animateDailyTrophy(m, frac, y) {
+    trophyAnim = { m, frac, y };
+    if (trophyLoop) return;
+    trophyLoop = true;
+    const cv = $('#d-trophy');
+    const loop = () => {
+      if (!trophyAnim || App.screen !== 'daily') { trophyAnim = null; trophyLoop = false; return; }
+      if (!B.reduce) drawTrophy(cv, trophyAnim.m, trophyAnim.frac, trophyAnim.y, performance.now() / 1000);
+      setTimeout(() => requestAnimationFrame(loop), 50);
+    };
+    requestAnimationFrame(loop);
   }
 
   // detail view
@@ -1338,6 +1382,7 @@
     $('#d-trophy-num').textContent = cleared + ' / ' + days;
     $('#d-trophy-bar').style.width = (cleared / days * 100) + '%';
     drawTrophy($('#d-trophy'), m, cleared / days, y);
+    animateDailyTrophy(m, cleared / days, y);
     // the play button always targets the selected day (today when the page opens)
     const [sy, sm, sd] = dailySel.split('-').map(Number);
     const done = !!S.p.daily[dailySel];

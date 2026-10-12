@@ -451,7 +451,8 @@
           push({ st: ns, gc, f: gc + weight * h(ns), parent: cur, m });
         }
       }
-      return { path: null, nodes };
+      // exhausted: every reachable position was looked at, so the board really cannot be solved any more
+      return { path: null, nodes, exhausted: heap.length === 0 };
     }
     return { solve };
   }
