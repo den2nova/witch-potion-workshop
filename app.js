@@ -694,8 +694,8 @@
     if (hasMoves) btns.push({ label: 'もう少し続ける', onClick: () => { if (doomed) { doomed.shown = false; doomed.since = g.s.moves; doomed.seen = new Map([[stateKey(g.s), 1]]); } } });
     const noItems = ['undo', 'shuffle', 'bottle'].every((k) => S.items(k) === 0);
     dialog({
-      title: hasMoves ? '同じところをぐるぐるしているみたい' : '手詰まりです',
-      body: h('div', null, h('p', { class: 'panel-text', text: hasMoves ? 'じつは少し前から、この並びではもうクリアできなくなっています。アイテムを使うか、最初からやり直してみませんか?' : '注げる組み合わせがありません。アイテムを使うか、最初からやり直しましょう。' }),
+      title: '手詰まりです',
+      body: h('div', null, h('p', { class: 'panel-text', text: '注げる組み合わせがありません。アイテムを使うか、最初からやり直しましょう。' }),
         noItems ? h('div', { class: 'panel-actions' },
           h('button', { class: 'btn small', onclick: () => { saveCurrent(true); renderShop(); show('shop'); } }, 'ショップで買う'),
           h('button', { class: 'btn small', onclick: () => { saveCurrent(true); show('minis'); } }, 'ミニゲームで稼ぐ')) : null),
