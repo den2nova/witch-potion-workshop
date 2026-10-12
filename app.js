@@ -510,7 +510,7 @@
     afterMove() {
       const g = App.game;
       tutorialAfterMove();
-      checkStuck();
+      checkStuck(false);
     },
     onSolved,
     onCurtainTap(c) {
@@ -568,7 +568,7 @@
     }
     updateToolbar();
     scheduleSave();
-    checkStuck();
+    checkStuck(true);
   }
 
   // shuffle item: the player picks one small bottle, and only that bottle's layers are mixed
@@ -615,7 +615,7 @@
     updateToolbar();
     scheduleSave();
     if (E.isSolved(s)) B.celebrate(false);
-    else checkStuck();
+    else checkStuck(true);
   }
 
   function quickBuy(k) {
@@ -636,17 +636,37 @@
 
   // stuck check after every move: no useful pour left at all, or (checked in the background) pours remain
   // but no order of them can finish the board any more
-  let stuckWorker = null, stuckSeq = 0;
-  function boardKey(s) { return s.moves + ':' + s.bottles.map((b) => b.layers.map((l) => l.c).join(',')).join('|') + ':' + (s.giant ? s.giant.filled : ''); }
-  function checkStuck() {
+  // Once the background search proves the board can no longer be solved, the notice waits: it only shows when
+  // the player starts going round in circles (comes back to a board they already had since then), or after
+  // a good while of moves without progress. With no useful pour left at all it still shows right away.
+  let stuckWorker = null, stuckSeq = 0, doomed = null;
+  const LOOP_MOVES = 20;
+  function stateKey(s) { return s.bottles.map((b) => b.layers.map((l) => l.c).join(',')).join('|') + ':' + (s.giant ? s.giant.filled : ''); }
+  function boardKey(s) { return s.moves + ':' + stateKey(s); }
+  function checkStuck(changedByItem) {
     const g = App.game;
-    if (!g || E.isSolved(g.s)) return;
+    if (!g || E.isSolved(g.s)) { doomed = null; return; }
+    if (changedByItem || (doomed && doomed.g !== g)) doomed = null;
     const seq = ++stuckSeq;
     const key = boardKey(g.s);
     const still = () => App.game === g && seq === stuckSeq && boardKey(g.s) === key;
     if (E.legalMoves(g.s, true).length === 0) { setTimeout(() => still() && stuckDialog(false, still), 350); return; }
+    // already known to be unsolvable (pouring can never make it solvable again): just watch for circling
+    if (doomed) {
+      const k = stateKey(g.s);
+      const n = (doomed.seen.get(k) || 0) + 1;
+      doomed.seen.set(k, n);
+      if (!doomed.shown && (n >= 2 || g.s.moves - doomed.since >= LOOP_MOVES)) {
+        doomed.shown = true;
+        setTimeout(() => still() && stuckDialog(true, still), 350);
+      }
+      return;
+    }
     const state = JSON.parse(JSON.stringify(Object.assign({}, g.s, { history: [] })));
-    const done = (v) => { if (v === false && still()) stuckDialog(true, still); };
+    const done = (v) => {
+      if (v !== false || !still()) return;
+      doomed = { g, since: g.s.moves, seen: new Map([[stateKey(g.s), 1]]), shown: false };
+    };
     try {
       if (stuckWorker) stuckWorker.terminate();
       stuckWorker = new Worker('solver-worker.js');
@@ -670,10 +690,12 @@
     btns.push({ label: 'シャッフル', onClick: () => useItem('shuffle') });
     if (g.s.added < 2) btns.push({ label: 'ボトル追加', onClick: () => useItem('bottle') });
     btns.push({ label: 'リスタート', primary: true, onClick: () => restart(true) });
+    // "keep trying": ask again only after another round of circling
+    if (hasMoves) btns.push({ label: 'もう少し続ける', onClick: () => { if (doomed) { doomed.shown = false; doomed.since = g.s.moves; doomed.seen = new Map([[stateKey(g.s), 1]]); } } });
     const noItems = ['undo', 'shuffle', 'bottle'].every((k) => S.items(k) === 0);
     dialog({
-      title: '手詰まりです',
-      body: h('div', null, h('p', { class: 'panel-text', text: hasMoves ? 'まだ注げる瓶はありますが、この並びからはもうクリアできません。アイテムを使うか、最初からやり直しましょう。' : '注げる組み合わせがありません。アイテムを使うか、最初からやり直しましょう。' }),
+      title: hasMoves ? '同じところをぐるぐるしているみたい' : '手詰まりです',
+      body: h('div', null, h('p', { class: 'panel-text', text: hasMoves ? 'じつは少し前から、この並びではもうクリアできなくなっています。アイテムを使うか、最初からやり直してみませんか?' : '注げる組み合わせがありません。アイテムを使うか、最初からやり直しましょう。' }),
         noItems ? h('div', { class: 'panel-actions' },
           h('button', { class: 'btn small', onclick: () => { saveCurrent(true); renderShop(); show('shop'); } }, 'ショップで買う'),
           h('button', { class: 'btn small', onclick: () => { saveCurrent(true); show('minis'); } }, 'ミニゲームで稼ぐ')) : null),
