@@ -166,25 +166,80 @@
     x.drawImage(v.mask, 0, 0, w, h);
     let d;
     try { d = x.getImageData(0, 0, w, h).data; } catch (e) { return null; }
+    // each row keeps its separate runs of liquid (e.g. a fox's body and its tail are two runs)
     const spans = [];
     for (let y = 0; y < h; y++) {
-      let l = -1, r = -1;
-      for (let i = 0; i < w; i++) if (d[(y * w + i) * 4 + 3] > 127) { if (l < 0) l = i; r = i; }
-      spans.push(l < 0 ? null : { c: (l + r + 1) / 2 / w, w: (r - l + 1) / w });
+      const runs = [];
+      let l = -1;
+      for (let i = 0; i <= w; i++) {
+        const on = i < w && d[(y * w + i) * 4 + 3] > 127;
+        if (on && l < 0) l = i;
+        if (!on && l >= 0) { runs.push({ c: (l + i) / 2 / w, w: (i - l) / w }); l = -1; }
+      }
+      spans.push(runs.length ? runs : null);
     }
     g._spans = spans;
     return spans;
   }
+  // the run of liquid at that height that lies under the bottle's neck (the main body, not a tail or a handle)
   function spanAt(v, yf) {
     const sp = cavitySpans(v);
-    if (!sp) return { c: v.geo.mouthX, w: 0.5 };
+    const nx = v.geo.neckX != null ? v.geo.neckX : v.geo.mouthX;
+    if (!sp) return { c: nx, w: 0.5 };
     const i = Math.max(0, Math.min(sp.length - 1, Math.floor(yf * sp.length)));
     for (let k = 0; k < sp.length; k++) {
-      const a = sp[i - k], b = sp[i + k];
-      if (a) return a;
-      if (b) return b;
+      const runs = sp[i - k] || sp[i + k];
+      if (!runs) continue;
+      let best = runs[0], bd = Infinity;
+      for (const r of runs) {
+        const d = Math.abs(r.c - nx) - r.w / 2; // inside the run: negative
+        if (d < bd) { bd = d; best = r; }
+      }
+      return best;
     }
-    return { c: v.geo.mouthX, w: 0.5 };
+    return { c: nx, w: 0.5 };
+  }
+  // giant bottles: the roomiest spot inside the bottle (centre of the largest circle that fits in the liquid
+  // area), leaning towards the column under the neck, so the big mark sits in the body, not in a tail or ring
+  function bigMarkSpot(v) {
+    const g = v.geo;
+    if (g._bigSpot) return g._bigSpot;
+    const w = 64, h = 96;
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const x = c.getContext('2d');
+    x.drawImage(v.mask, 0, 0, w, h);
+    let d;
+    try { d = x.getImageData(0, 0, w, h).data; } catch (e) { return { x: g.mouthX, y: (g.top + g.bottom) / 2 }; }
+    const INF = 1e9, dist = new Float32Array(w * h);
+    for (let i = 0; i < w * h; i++) dist[i] = d[i * 4 + 3] > 127 ? INF : 0;
+    const at = (xx, yy) => (xx < 0 || yy < 0 || xx >= w || yy >= h ? 0 : dist[yy * w + xx]);
+    for (let yy = 0; yy < h; yy++) for (let xx = 0; xx < w; xx++) {
+      const k = yy * w + xx; if (!dist[k]) continue;
+      dist[k] = Math.min(dist[k], at(xx - 1, yy) + 1, at(xx, yy - 1) + 1, at(xx - 1, yy - 1) + 1.414, at(xx + 1, yy - 1) + 1.414);
+    }
+    for (let yy = h - 1; yy >= 0; yy--) for (let xx = w - 1; xx >= 0; xx--) {
+      const k = yy * w + xx; if (!dist[k]) continue;
+      dist[k] = Math.min(dist[k], at(xx + 1, yy) + 1, at(xx, yy + 1) + 1, at(xx + 1, yy + 1) + 1.414, at(xx - 1, yy + 1) + 1.414);
+    }
+    // bottles whose neck is not above the body (tilted hat, crescent moon, S-shaped aurora): use the body's own centre
+    const OFFSET_NECK = { giant_hat: 1, giant_moon: 1, giant_aurora: 1 };
+    let cxBody = 0, cnt = 0;
+    for (let yy = 0; yy < h; yy++) for (let xx = 0; xx < w; xx++) if (dist[yy * w + xx]) { cxBody += xx + 0.5; cnt++; }
+    const nx = OFFSET_NECK[v.key] && cnt ? cxBody / cnt : (g.neckX != null ? g.neckX : g.mouthX) * w;
+    // stay on the bottle's centre line (under the neck): the roomiest point along it, allowing a small sideways
+    // step only when the line itself runs through a hole (ring bottles); vertical ties go to the middle of the body
+    let best = null, bs = -1;
+    for (const band of [0.06, 0.15, 0.3, 0.5]) {
+      const x0 = Math.max(0, Math.floor(nx - band * w)), x1 = Math.min(w - 1, Math.ceil(nx + band * w));
+      for (let yy = 0; yy < h; yy++) for (let xx = x0; xx <= x1; xx++) {
+        const dv = dist[yy * w + xx]; if (dv < 3) continue;
+        const score = Math.min(dv, 9) - Math.abs(xx + 0.5 - nx) * 0.15 - Math.abs(yy + 0.5 - h * (g.top + g.bottom) / 2) * 0.05;
+        if (score > bs) { bs = score; best = { x: (xx + 0.5) / w, y: (yy + 0.5) / h }; }
+      }
+      if (best) break;
+    }
+    g._bigSpot = best || { x: g.mouthX, y: (g.top + g.bottom) / 2 };
+    return g._bigSpot;
   }
   function drawBadge(ctx, x, y, r, mark, hex, alpha) {
     ctx.save();
@@ -206,10 +261,9 @@
     const a = opts.alpha != null ? opts.alpha : 1;
     // the giant's own colour, big, in the middle of the bottle
     if (opts.bigMark) {
-      const yf = (g.top + g.bottom) / 2;
-      const sp = spanAt(v, yf);
+      const c = bigMarkSpot(v);
       const r = Math.max(13, Math.min(30, rect.w * 0.1));
-      drawBadge(ctx, sp.c * rect.w, yf * rect.h, r, opts.bigMark.mark, opts.bigMark.color, a * 0.85);
+      drawBadge(ctx, c.x * rect.w, c.y * rect.h, r, opts.bigMark.mark, opts.bigMark.color, a * 0.85);
       return;
     }
     const list = segs.filter((s) => s.mark && !s.ghost && !s.hidden).sort((p, q) => p.f0 - q.f0);
