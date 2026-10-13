@@ -190,13 +190,11 @@
     ctx.save();
     ctx.globalAlpha = alpha;
     ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(22,12,44,0.82)';
+    ctx.fillStyle = 'rgba(22,12,44,0.72)';
     ctx.fill();
-    ctx.lineWidth = Math.max(1.5, r * 0.16);
-    ctx.strokeStyle = hex;
+    ctx.lineWidth = Math.max(1.2, r * 0.13);
+    ctx.strokeStyle = 'rgba(255,255,255,0.8)';
     ctx.stroke();
-    ctx.beginPath(); ctx.arc(x, y, r + ctx.lineWidth * 0.5 + 0.6, 0, Math.PI * 2);
-    ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(255,255,255,0.75)'; ctx.stroke();
     ctx.fillStyle = '#fff';
     ctx.font = `700 ${Math.round(r * 1.25)}px "Zen Maru Gothic", "Segoe UI Symbol", sans-serif`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -210,22 +208,27 @@
     if (opts.bigMark) {
       const yf = (g.top + g.bottom) / 2;
       const sp = spanAt(v, yf);
-      const r = Math.max(14, Math.min(40, rect.w * 0.13));
-      drawBadge(ctx, sp.c * rect.w, yf * rect.h, r, opts.bigMark.mark, opts.bigMark.color, a * 0.92);
+      const r = Math.max(13, Math.min(30, rect.w * 0.1));
+      drawBadge(ctx, sp.c * rect.w, yf * rect.h, r, opts.bigMark.mark, opts.bigMark.color, a * 0.85);
       return;
     }
     const list = segs.filter((s) => s.mark && !s.ghost && !s.hidden).sort((p, q) => p.f0 - q.f0);
-    list.forEach((s, i) => {
+    if (!list.length) return;
+    const items = list.map((s) => {
       const y0 = R.yForFraction(g, s.f0) * rect.h;
       const y1 = R.yForFraction(g, s.f1) * rect.h;
-      const band = Math.abs(y0 - y1);
-      const ym = (y0 + y1) / 2;
-      const sp = spanAt(v, ym / rect.h);
-      const r = Math.max(8, Math.min(13, band * 0.45, rect.w * 0.34));
-      // thin layers (wide, flat bottles): badges would touch, so they step left and right in turn
+      return { s, band: Math.abs(y0 - y1), ym: (y0 + y1) / 2 };
+    });
+    // one size for every mark on the board (from the bottle width, not the layer), so the columns look even and calm
+    const minBand = Math.min(...items.map((it) => it.band));
+    // a bottle whose layers are thin gets slightly smaller marks rather than a zig-zag
+    const r = Math.max(6, Math.min(9, rect.w * 0.15, minBand * 0.5 - 0.5));
+    items.forEach((it, i) => {
+      const sp = spanAt(v, it.ym / rect.h);
       let x = sp.c * rect.w;
-      if (2 * r > band + 1 && list.length > 1) x += (i % 2 ? 1 : -1) * Math.min(r * 1.05, sp.w * rect.w * 0.4);
-      drawBadge(ctx, x, ym, r, s.mark, s.color, a);
+      // only when even the smallest marks would touch: step left and right in turn
+      if (2 * r > minBand + 1 && items.length > 1) x += (i % 2 ? 1 : -1) * Math.min(r * 0.9, sp.w * rect.w * 0.35);
+      drawBadge(ctx, x, it.ym, r, it.s.mark, it.s.color, a);
     });
   }
 
