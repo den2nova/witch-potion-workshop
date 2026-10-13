@@ -78,6 +78,10 @@
     const s = Board.s;
     if (!s) return false;
     if (Board.anims.length || Board.particles.length || Board.selected !== null || Board.guide || Board.pickable || Board.giantShine) return true;
+    // the bottles sliding in at the start, and the bounce when a level is cleared
+    const n = s.bottles.length, t = now();
+    if (t - Board.startT < (Board.reduce ? 150 : 500) * (1 + n * 0.12) + 50) return true;
+    if (Board.bounce && t - Board.bounce < 420 + n * 70 + 50) return true;
     for (const o of [Board.corks, Board.curtainAnims, Board.shakes, Board.reveals]) for (const k in o) return true;
     for (let i = 0; i < s.bottles.length; i++) if ((Board.lift[i] || 0) > 0.05) return true;
     return false;
