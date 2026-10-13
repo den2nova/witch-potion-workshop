@@ -308,6 +308,7 @@
       R.drawVessel(ctx, g, Board.giantRect, giantSegs(extra), {
         stopper: s.giant.filled >= s.giant.capacity ? giantStopper() : null,
         rich: true,
+        bigMark: Board.marks ? { mark: GD.COLORS[s.giant.color].mark, color: GD.COLORS[s.giant.color].hex } : null,
         variant: s.giant.variant, wave: 1.6, time: t / 1000,
         glow: Board.selected !== null && E.canPour(s, Board.selected, 'g') ? 1.2 + pulse * 0.6 : 0,
         shine: Board.giantShine ? Board.giantShine() : 0,

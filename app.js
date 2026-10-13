@@ -826,7 +826,10 @@
     if (g.daily) return;
     const seen = (k) => S.p.seen.includes(k);
     const mark = (k) => { if (!seen(k)) { S.p.seen.push(k); S.changed(); } };
-    if (g.n === 1 && !seen('tut1') && g.s.moves === 0) {
+    if (g.n === 1 && !seen('tut1') && g.s.moves === 0 && !seen('cvd')) {
+      // before the very first tutorial: tell about colour support and ask whether to turn it on
+      askColorSupport(() => { mark('cvd'); setupTutorial(); });
+    } else if (g.n === 1 && !seen('tut1') && g.s.moves === 0) {
       const r = E.solve(g.s, 20000, 1);
       if (!r.path) return;
       g.tutorial = { kind: 'basic', path: r.path, step: 0 };
@@ -847,6 +850,34 @@
       g.tutorial = { kind: 'shuffle' };
       showSkip(() => { g.tutorial = null; hideHint(); g.freeUse.shuffle = false; mark('tut4'); updateToolbar(); });
     }
+  }
+  function askColorSupport(done) {
+    const sample = h('div', { class: 'cvd-sample' }, [6, 0, 4, 3, 5].map((c) => h('span', { class: 'cvd-chip', style: { '--c': GD.COLORS[c].hex } },
+      h('i', { text: GD.COLORS[c].mark }))));
+    const choose = (on) => {
+      S.p.settings.colorMarks = on;
+      applySettings();
+      S.changed();
+      dialog({
+        title: on ? '色覚サポートをオンにしました' : '色覚サポートはオフです',
+        body: h('div', null,
+          h('p', { class: 'panel-text', text: '色覚サポートは、トップ画面の「設定」ボタン、またはゲーム中の右上の歯車マークから、いつでもオン/オフを切り替えられます。' })),
+        buttons: [{ label: 'OK', primary: true, onClick: () => done() }],
+        closable: false,
+      });
+    };
+    dialog({
+      title: '色覚サポート',
+      body: h('div', null,
+        h('p', { class: 'panel-text', text: 'このゲームには、色の見分けを助ける「色覚サポート」があります。オンにすると、瓶の中の色ごとに、下のような記号を表示します。' }),
+        sample,
+        h('p', { class: 'panel-text', text: '色覚サポートを使いますか?' })),
+      buttons: [
+        { label: '使わない', onClick: () => choose(false) },
+        { label: '使う', primary: true, onClick: () => choose(true) },
+      ],
+      closable: false,
+    });
   }
   function guideNext() {
     const g = App.game;
@@ -948,7 +979,7 @@
       row('BGM', slider('bgm')),
       row('効果音', slider('se')),
       ('vibrate' in navigator) ? row('振動', toggle('vibration')) : null,
-      row('色覚補助の記号', toggle('colorMarks')),
+      row('色覚サポート(色の記号)', toggle('colorMarks')),
       row('演出を減らす', toggle('reduceMotion')),
       h('div', { class: 'set-row' }, h('span', { text: '進捗の保存' }), h('span', { class: 'sync', text: 'この端末のブラウザに保存' })),
       h('p', { class: 'set-note', text: '進捗はこの端末のブラウザに保存されます。ブラウザのデータを消すと進捗も消えます。別の端末とは共有されません。' }),

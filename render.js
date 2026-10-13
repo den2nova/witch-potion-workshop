@@ -151,6 +151,84 @@
     return fogPattern;
   }
 
+  // ---------- colour-assist marks ----------
+  // The marks sit in FRONT of the glass (so painted decoration on a skin never hides them), on a dark round
+  // badge with a ring in the layer's colour, centred on the liquid itself at that height (not on the mouth,
+  // which is off-centre on some skins). Giant bottles also get one big badge in the middle of the cavity,
+  // shown even while the bottle is nearly empty. See the spec: 色覚補助マークの表示ルール.
+  function cavitySpans(v) {
+    const g = v.geo;
+    if (g._spans) return g._spans;
+    const n = 128;
+    const w = 64, h = n;
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const x = c.getContext('2d');
+    x.drawImage(v.mask, 0, 0, w, h);
+    let d;
+    try { d = x.getImageData(0, 0, w, h).data; } catch (e) { return null; }
+    const spans = [];
+    for (let y = 0; y < h; y++) {
+      let l = -1, r = -1;
+      for (let i = 0; i < w; i++) if (d[(y * w + i) * 4 + 3] > 127) { if (l < 0) l = i; r = i; }
+      spans.push(l < 0 ? null : { c: (l + r + 1) / 2 / w, w: (r - l + 1) / w });
+    }
+    g._spans = spans;
+    return spans;
+  }
+  function spanAt(v, yf) {
+    const sp = cavitySpans(v);
+    if (!sp) return { c: v.geo.mouthX, w: 0.5 };
+    const i = Math.max(0, Math.min(sp.length - 1, Math.floor(yf * sp.length)));
+    for (let k = 0; k < sp.length; k++) {
+      const a = sp[i - k], b = sp[i + k];
+      if (a) return a;
+      if (b) return b;
+    }
+    return { c: v.geo.mouthX, w: 0.5 };
+  }
+  function drawBadge(ctx, x, y, r, mark, hex, alpha) {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(22,12,44,0.82)';
+    ctx.fill();
+    ctx.lineWidth = Math.max(1.5, r * 0.16);
+    ctx.strokeStyle = hex;
+    ctx.stroke();
+    ctx.beginPath(); ctx.arc(x, y, r + ctx.lineWidth * 0.5 + 0.6, 0, Math.PI * 2);
+    ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(255,255,255,0.75)'; ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.font = `700 ${Math.round(r * 1.25)}px "Zen Maru Gothic", "Segoe UI Symbol", sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(mark, x, y + r * 0.06);
+    ctx.restore();
+  }
+  function drawMarks(ctx, v, rect, segs, opts) {
+    const g = v.geo;
+    const a = opts.alpha != null ? opts.alpha : 1;
+    // the giant's own colour, big, in the middle of the bottle
+    if (opts.bigMark) {
+      const yf = (g.top + g.bottom) / 2;
+      const sp = spanAt(v, yf);
+      const r = Math.max(14, Math.min(40, rect.w * 0.13));
+      drawBadge(ctx, sp.c * rect.w, yf * rect.h, r, opts.bigMark.mark, opts.bigMark.color, a * 0.92);
+      return;
+    }
+    const list = segs.filter((s) => s.mark && !s.ghost && !s.hidden).sort((p, q) => p.f0 - q.f0);
+    list.forEach((s, i) => {
+      const y0 = R.yForFraction(g, s.f0) * rect.h;
+      const y1 = R.yForFraction(g, s.f1) * rect.h;
+      const band = Math.abs(y0 - y1);
+      const ym = (y0 + y1) / 2;
+      const sp = spanAt(v, ym / rect.h);
+      const r = Math.max(8, Math.min(13, band * 0.45, rect.w * 0.34));
+      // thin layers (wide, flat bottles): badges would touch, so they step left and right in turn
+      let x = sp.c * rect.w;
+      if (2 * r > band + 1 && list.length > 1) x += (i % 2 ? 1 : -1) * Math.min(r * 1.05, sp.w * rect.w * 0.4);
+      drawBadge(ctx, x, ym, r, s.mark, s.color, a);
+    });
+  }
+
   // giant bottles: the liquid's own colour deepens towards the bottom, a soft glow sits in its middle and
   // a bright line marks the surface (drawn only on the filled part, under the glass and the colour marks)
   function hexRgb(hex) { const n = parseInt(hex.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
@@ -312,14 +390,6 @@
             x.textAlign = 'center'; x.textBaseline = 'middle';
             x.fillStyle = 'rgba(210,180,255,0.75)';
             x.fillText('?', cx, my);
-          } else if (s.mark && !s.ghost) {
-            x.font = `700 ${fs * 0.9}px "Zen Maru Gothic", sans-serif`;
-            x.textAlign = 'center'; x.textBaseline = 'middle';
-            x.fillStyle = 'rgba(255,255,255,0.85)';
-            x.strokeStyle = 'rgba(0,0,0,0.45)';
-            x.lineWidth = 2 * dpr;
-            x.strokeText(s.mark, cx, my);
-            x.fillText(s.mark, cx, my);
           }
         });
       }
@@ -368,6 +438,7 @@
       ctx.restore();
     }
     ctx.drawImage(front, 0, 0, rect.w, rect.h);
+    if (!angle && segs && segs.length) drawMarks(ctx, v, rect, segs, opts);
     // the bottle's own stopper (giant bottles): opts.stopper = true, or { dy, alpha } while it drops on
     if (opts.stopper && v.stopper && v.geo.stopperBox) {
       const b = v.geo.stopperBox, st = opts.stopper === true ? {} : opts.stopper;
