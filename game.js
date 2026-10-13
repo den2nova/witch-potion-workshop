@@ -36,6 +36,7 @@
   };
 
   Board.resize = function () {
+    Board.dirty = true;
     const el = Board.canvas.parentElement;
     const r = el.getBoundingClientRect();
     const dpr = Math.min(root.devicePixelRatio || 1, 2.5);
@@ -66,16 +67,37 @@
     Board.run();
   };
 
-  Board.setVessel = function (v) { Board.vessel = v; Board.cache = []; Board.layout(); };
+  Board.setVessel = function (v) { Board.vessel = v; Board.cache = []; Board.layout(); Board.dirty = true; };
 
+  // Redraw only as often as needed: every frame while something moves (pours, effects, a lifted bottle, the
+  // tutorial pulse), about 20 fps for the giant bottle's slow ripple, and otherwise only when something changed
+  // (Board.invalidate) plus a slow safety redraw. Saves battery on phones; looks the same.
+  Board.dirty = true;
+  Board.invalidate = function () { Board.dirty = true; };
+  function busy() {
+    const s = Board.s;
+    if (!s) return false;
+    if (Board.anims.length || Board.particles.length || Board.selected !== null || Board.guide || Board.pickable || Board.giantShine) return true;
+    for (const o of [Board.corks, Board.curtainAnims, Board.shakes, Board.reveals]) for (const k in o) return true;
+    for (let i = 0; i < s.bottles.length; i++) if ((Board.lift[i] || 0) > 0.05) return true;
+    return false;
+  }
   Board.run = function () {
     if (Board.running) return;
     Board.running = true;
+    let last = 0;
     const tick = () => {
       if (!Board.running) return;
       const pr = Board.canvas.parentElement;
       if (pr.clientWidth && (Math.abs(pr.clientWidth - Board.W) > 1 || Math.abs(pr.clientHeight - Board.H) > 1)) Board.resize();
-      Board.draw();
+      const t = now();
+      const s = Board.s;
+      const ambient = s && s.giant && !Board.reduce;
+      if (Board.dirty || busy() || (ambient && t - last >= 48) || t - last > 500) {
+        Board.dirty = false;
+        last = t;
+        Board.draw();
+      }
       requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
@@ -173,6 +195,7 @@
   }
 
   Board.layout = function () {
+    Board.dirty = true;
     const s = Board.s;
     if (!s) return;
     const W = Board.W, H = Board.H;
@@ -692,6 +715,7 @@
   }
 
   Board.tap = function (i) {
+    Board.dirty = true;
     if (Board.busy || Board.anims.length) {
       if (Board.queue.length < 6) Board.queue.push(i);
       return;

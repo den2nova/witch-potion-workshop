@@ -205,6 +205,7 @@
     const reduce = st.reduceMotion || (root.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
     B.reduce = reduce;
     B.marks = st.colorMarks;
+    if (B.invalidate) B.invalidate();
     document.documentElement.classList.toggle('reduce', !!reduce);
   }
 
@@ -577,6 +578,7 @@
     }
     updateToolbar();
     scheduleSave();
+    B.invalidate();
     checkStuck(true);
   }
 
@@ -595,6 +597,7 @@
   function cancelPick() {
     B.pick = null;
     B.pickable = null;
+    B.invalidate();
     $('#t-shuffle').classList.remove('pulse');
     hideHint();
   }
@@ -621,6 +624,7 @@
     B.burst(r.x + r.w / 2, r.y + r.h * 0.4, 14, '#c7a6ff', 0.8);
     E.updateCurtains(s);
     tutorialItemUsed('shuffle');
+    B.invalidate();
     updateToolbar();
     scheduleSave();
     if (E.isSolved(s)) B.celebrate(false);
