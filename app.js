@@ -334,20 +334,29 @@
     updateNewsDot();
   }
   const newsRead = () => S.p.newsRead || (S.p.newsRead = []);
-  const unreadNews = () => news.items.filter((n) => !newsRead().includes(n.id));
+  // a notice groups several versions (1.6 = 1.6.0, 1.6.1, ...): it is read only when every version in it was read,
+  // so an update added to an existing group still shows as new
+  const newsIds = (n) => (n.versions && n.versions.length ? n.versions : [n.id]);
+  const isRead = (n) => newsIds(n).every((v) => newsRead().includes(v));
+  const unreadNews = () => news.items.filter((n) => !isRead(n));
   function updateNewsDot() { const d = $('#news-dot'); if (d) d.hidden = !unreadNews().length; }
   function openNews() {
-    const list = h('div', { class: 'news-list' }, news.items.length ? news.items.map((n) => h('article', { class: 'news-item' + (n.important ? ' important' : '') },
-      h('h3', { text: n.title }),
-      h('div', { class: 'news-date', text: n.date }),
-      h('ul', null, (n.body || []).map((t) => h('li', { text: t }))))) : h('p', { class: 'panel-text', text: 'お知らせはまだありません。' }));
+    // newest (and any important or unread) notice opens; the rest are one-line headings that open on tap
+    const list = h('div', { class: 'news-list' }, news.items.length ? news.items.map((n, i) => {
+      const open = i === 0 || n.important || !isRead(n);
+      const d = h('details', { class: 'news-item' + (n.important ? ' important' : ''), open: open ? true : null },
+        h('summary', null, h('span', { class: 'news-date', text: n.date }), h('span', { class: 'news-title', text: n.title }), !isRead(n) ? h('span', { class: 'news-new', text: 'NEW' }) : null),
+        h('ul', null, (n.body || []).map((t) => h('li', { text: t }))));
+      d.addEventListener('toggle', () => setTimeout(() => list.dispatchEvent(new Event('scroll')), 0));
+      return d;
+    }) : h('p', { class: 'panel-text', text: 'お知らせはまだありません。' }));
     Snd.play('letter');
     const wrap = h('div', { class: 'news-scroll' }, list);
     const more = () => wrap.classList.toggle('more', list.scrollTop + list.clientHeight < list.scrollHeight - 4);
     list.addEventListener('scroll', more, { passive: true });
     dialog({ title: 'お知らせ', cls: 'news-panel', body: h('div', { class: 'news-body' }, h('div', { class: 'letter' }, img('letter', 'letter-img')), wrap), buttons: [{ label: '閉じる', primary: true }] });
     setTimeout(more, 50);
-    news.items.forEach((n) => { if (!newsRead().includes(n.id)) newsRead().push(n.id); });
+    news.items.forEach((n) => newsIds(n).forEach((v) => { if (!newsRead().includes(v)) newsRead().push(v); }));
     S.changed();
     updateNewsDot();
   }

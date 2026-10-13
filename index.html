@@ -136,9 +136,15 @@ img { max-width: 100%; }
   background: linear-gradient(to bottom, rgba(236, 212, 176, 0), rgba(236, 212, 176, .96)); opacity: 0; transition: opacity .2s; }
 .news-scroll.more::after { opacity: 1; }
 .news-panel .panel-actions { flex: none; }
-.news-item h3 { font-size: 16px; color: #4b2a1a; }
-.news-item .news-date { font-size: 12px; color: #6a4a2a; }
-.news-item.important h3::before { content: "重要 "; color: #b3263a; }
+.news-item { border-bottom: 1px solid rgba(106, 74, 42, .25); padding-bottom: 6px; }
+.news-item summary { list-style: none; cursor: pointer; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; padding: 4px 0; }
+.news-item summary::-webkit-details-marker { display: none; }
+.news-item summary::before { content: "▸"; color: #8a5a2a; font-size: 12px; transition: transform .15s; }
+.news-item[open] summary::before { transform: rotate(90deg); }
+.news-item .news-title { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: #4b2a1a; flex: 1; min-width: 0; }
+.news-item .news-date { font-size: 12px; color: #6a4a2a; font-variant-numeric: tabular-nums; }
+.news-item .news-new { font-size: 10px; font-weight: 700; color: #fff; background: #c2413a; border-radius: 6px; padding: 0 5px; }
+.news-item.important .news-title::before { content: "重要 "; color: #b3263a; }
 .news-item ul { margin: 4px 0 0; padding-left: 1.2em; font-size: 14px; }
 .note.par { display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 700; color: #8a4b00; animation: parglow 1.6s ease-in-out .9s 2 both; }
 .note.par .coin-ic { width: 20px; height: 20px; }
@@ -671,15 +677,15 @@ img { max-width: 100%; }
   <div id="toasts"></div>
 </div>
 
-<script src="engine.js?v=20261013131434" charset="utf-8"></script>
-<script src="data.js?v=20261013131434" charset="utf-8"></script>
-<script src="render.js?v=20261013131434" charset="utf-8"></script>
-<script src="audio.js?v=20261013131434" charset="utf-8"></script>
-<script src="store.js?v=20261013131434" charset="utf-8"></script>
-<script src="game.js?v=20261013131434" charset="utf-8"></script>
-<script src="mini.js?v=20261013131434" charset="utf-8"></script>
-<script src="gacha.js?v=20261013131434" charset="utf-8"></script>
-<script src="app.js?v=20261013131434" charset="utf-8"></script>
+<script src="engine.js?v=20261013132218" charset="utf-8"></script>
+<script src="data.js?v=20261013132218" charset="utf-8"></script>
+<script src="render.js?v=20261013132218" charset="utf-8"></script>
+<script src="audio.js?v=20261013132218" charset="utf-8"></script>
+<script src="store.js?v=20261013132218" charset="utf-8"></script>
+<script src="game.js?v=20261013132218" charset="utf-8"></script>
+<script src="mini.js?v=20261013132218" charset="utf-8"></script>
+<script src="gacha.js?v=20261013132218" charset="utf-8"></script>
+<script src="app.js?v=20261013132218" charset="utf-8"></script>
 <script>
   (function () {
     // iPhone / iPad home-screen app only (navigator.standalone exists only there)
