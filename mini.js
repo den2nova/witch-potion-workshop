@@ -26,7 +26,7 @@
     $('#mini-title').textContent = { cauldron: '大釜キャッチ', broom: 'ほうきの夜間飛行', clean: 'お掃除' }[kind];
     sizeCanvas();
     const need = {
-      cauldron: [0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => 'mini_cauldron_sprites_' + i).concat(['bg_portrait', 'bg_landscape']),
+      cauldron: [0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => 'mini_cauldron_sprites_' + i).concat(['mini_cauldron_front', 'bg_portrait', 'bg_landscape']),
       broom: ['mini_broom_bg', 'mini_broom_sprites_0', 'mini_broom_sprites_1', 'mini_broom_sprites_2', 'mini_broom_sprites_3'],
       clean: ['clean_table_oak', 'clean_table_slate', 'clean_table_marble', 'clean_cloth'].concat(R.sheets.clean_stains.map((f) => f.replace('.webp', ''))),
     }[kind];
@@ -120,9 +120,12 @@
   GAMES.cauldron = function () {
     const COLORS = [0, 5, 3, 4, 6, 2]; // sprite index -> potion colour (berry red, crystal blue, leaf green, feather yellow, flower purple, mushroom pink)
     const NAMES = ['赤', '青', '緑', '黄', '紫', '桃'];
-    const G = { t: 45, score: 0, streak: 0, target: 0, nextSwitch: 10, items: [], spawn: 0, cx: 0, fill: [], over: false, off: null, flash: 0 };
+    const G = { t: 45, score: 0, streak: 0, target: 0, nextSwitch: 10, items: [], spawn: 0, cx: 0, fill: [], over: false, off: null, flash: 0, sinking: [], drops: [], ripples: [] };
+    // the cauldron's mouth in the sprite (0..1): caught items sink into it between the back and the front piece
+    const MOUTH = { cx: 0.5, cy: 0.0954, rx: 0.324, ry: 0.0644 };
     G.init = function () {
       G.t = 45; G.score = 0; G.streak = 0; G.target = Math.floor(Math.random() * 6); G.nextSwitch = 10; G.items = []; G.spawn = 0; G.fill = []; G.over = false;
+      G.sinking = []; G.drops = []; G.ripples = [];
       G.cx = M.W / 2; G.keys = 0;
       G.off = pointerSetup(G);
     };
@@ -165,6 +168,9 @@
           it.y += it.vy * dt; it.rot += it.vr * dt;
           if (!it.done && it.y > cy - cw * 0.25 && it.y < cy + cw * 0.1 && Math.abs(it.x - G.cx) < cw * 0.42) {
             it.done = true;
+            // the caught thing drops into the cauldron (frogs and toadstools hop back out)
+            const bad = it.kind === 6 || it.kind === 8;
+            G.sinking.push({ kind: it.kind, dx: it.x - G.cx, y: it.y, rot: it.rot, t: 0, bad, vx: (it.x < G.cx ? -1 : 1) * (60 + Math.random() * 60), vy: -260 });
             if (it.kind === 6 || it.kind === 8) { G.t -= 5; G.streak = 0; Snd.play('bump'); G.flash = 1; }
             else if (it.kind === G.target) {
               G.streak++;
@@ -184,6 +190,78 @@
           setTimeout(() => result('大釜キャッチ', ['得点 ' + G.score + (best ? '(自己ベスト更新!)' : ''), '最高 ' + S.best('cauldron')], coins, () => M.start('cauldron')), 400);
         }
       }
+      // the cauldron: back first, then the potion surface, things sinking in, splashes, and the front on top
+      const cim = R.get('mini_cauldron_sprites_7');
+      const fim = R.get('mini_cauldron_front');
+      const chh = cim ? cw * cim.naturalHeight / cim.naturalWidth : cw * 0.76;
+      const top = cy - chh * 0.45;
+      const mx = G.cx + (MOUTH.cx - 0.5) * cw, my = top + MOUTH.cy * chh, mrx = MOUTH.rx * cw, mry = MOUTH.ry * chh;
+      if (cim) ctx.drawImage(cim, G.cx - cw / 2, top, cw, chh);
+      const level = my + mry * 0.25;
+      if (G.fill.length) {
+        ctx.save();
+        ctx.beginPath(); ctx.ellipse(mx, my, mrx * 0.98, mry * 0.98, 0, 0, Math.PI * 2); ctx.clip();
+        const grad = ctx.createLinearGradient(mx - mrx, 0, mx + mrx, 0);
+        G.fill.slice(-6).forEach((c, i, a) => grad.addColorStop(i / Math.max(1, a.length - 1), GD.COLORS[c].hex));
+        ctx.fillStyle = grad;
+        ctx.beginPath(); ctx.ellipse(mx, level, mrx, mry * 0.9, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.18)';
+        ctx.beginPath(); ctx.ellipse(mx - mrx * 0.25, level - mry * 0.25, mrx * 0.45, mry * 0.25, 0, 0, Math.PI * 2); ctx.fill();
+        // ripples where things went in
+        for (const rp of G.ripples) {
+          const p = rp.t / 0.6;
+          ctx.strokeStyle = `rgba(255,255,255,${(0.7 * (1 - p)).toFixed(3)})`;
+          ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.ellipse(G.cx + rp.dx, level, mrx * (0.15 + p * 0.7), mry * (0.15 + p * 0.7), 0, 0, Math.PI * 2); ctx.stroke();
+        }
+        ctx.restore();
+      }
+      G.ripples.forEach((rp) => { rp.t += dt; });
+      G.ripples = G.ripples.filter((rp) => rp.t < 0.6);
+      // things sinking in: slide to the middle of the mouth, shrink and sink below the front lip
+      for (const sk of G.sinking) {
+        sk.t += dt;
+        const im = R.get('mini_cauldron_sprites_' + sk.kind);
+        if (sk.bad) {
+          sk.dx += sk.vx * dt; sk.y += sk.vy * dt; sk.vy += 900 * dt; sk.rot += dt * 6;
+          if (im) { ctx.save(); ctx.translate(G.cx + sk.dx, sk.y); ctx.rotate(Math.sin(sk.rot) * 0.6); ctx.drawImage(im, -size / 2, -size / 2, size, size * im.naturalHeight / im.naturalWidth); ctx.restore(); }
+          continue;
+        }
+        const p = Math.min(1, sk.t / 0.32);
+        const e = p * p;
+        const x = G.cx + sk.dx * (1 - p);
+        const y = sk.y + (level + mry * 1.2 - sk.y) * e;
+        const s = size * (1 - 0.35 * p);
+        if (!sk.splashed && y >= level - mry * 0.2) {
+          sk.splashed = true;
+          G.ripples.push({ dx: x - G.cx, t: 0 });
+          const col = GD.COLORS[COLORS[sk.kind] != null ? COLORS[sk.kind] : 0].hex;
+          for (let k = 0; k < 9; k++) {
+            const a = -Math.PI / 2 + (Math.random() - 0.5) * 2.2;
+            const sp = 120 + Math.random() * 140;
+            G.drops.push({ dx: x - G.cx, y: level, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, t: 0, col, r: 2 + Math.random() * 3 });
+          }
+        }
+        if (im) {
+          ctx.save();
+          // seen only above the potion surface once it is inside the mouth
+          if (p > 0.5) { ctx.beginPath(); ctx.rect(0, 0, W, level + mry * 0.3); ctx.clip(); }
+          ctx.translate(x, y); ctx.rotate(Math.sin(sk.rot) * 0.4 * (1 - p));
+          ctx.drawImage(im, -s / 2, -s / 2, s, s * im.naturalHeight / im.naturalWidth);
+          ctx.restore();
+        }
+      }
+      G.sinking = G.sinking.filter((sk) => (sk.bad ? sk.y < H + size : sk.t < 0.36));
+      if (fim) ctx.drawImage(fim, G.cx - cw / 2, top, cw, chh);
+      // splash drops fly in front of the cauldron
+      for (const d of G.drops) {
+        d.t += dt; d.dx += d.vx * dt; d.y += d.vy * dt; d.vy += 700 * dt;
+        ctx.globalAlpha = Math.max(0, 1 - d.t / 0.6);
+        ctx.fillStyle = d.col;
+        ctx.beginPath(); ctx.arc(G.cx + d.dx, d.y, d.r, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      G.drops = G.drops.filter((d) => d.t < 0.6);
       // items
       for (const it of G.items) {
         const im = R.get('mini_cauldron_sprites_' + it.kind);
@@ -192,21 +270,6 @@
         ctx.save(); ctx.translate(it.x, it.y); ctx.rotate(Math.sin(it.rot) * 0.4);
         ctx.drawImage(im, -s / 2, -s / 2, s, s * im.naturalHeight / im.naturalWidth);
         ctx.restore();
-      }
-      // cauldron with collected potion
-      const cim = R.get('mini_cauldron_sprites_7');
-      if (cim) {
-        const chh = cw * cim.naturalHeight / cim.naturalWidth;
-        const top = cy - chh * 0.45;
-        if (G.fill.length) {
-          const grad = ctx.createLinearGradient(G.cx - cw * 0.4, 0, G.cx + cw * 0.4, 0);
-          G.fill.slice(-6).forEach((c, i, a) => grad.addColorStop(i / Math.max(1, a.length - 1), GD.COLORS[c].hex));
-          ctx.fillStyle = grad;
-          ctx.beginPath();
-          ctx.ellipse(G.cx, top + chh * 0.12, cw * 0.38, chh * 0.09, 0, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        ctx.drawImage(cim, G.cx - cw / 2, top, cw, chh);
       }
       if (G.flash > 0) { ctx.fillStyle = `rgba(160,255,120,${G.flash * 0.25})`; ctx.fillRect(0, 0, W, H); G.flash -= dt * 2; }
       // target banner

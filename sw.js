@@ -3,7 +3,7 @@
    - Images, sound and fonts live in one long-lived cache that survives releases. Each release ships
      asset-manifest.json (file -> content hash); on activation only files whose hash changed are dropped,
      so an update downloads just the code and the assets that really changed. */
-const VERSION = '20261015214857';
+const VERSION = '20261015215831';
 const CODE = 'potion-code-' + VERSION;
 const ASSETS = 'potion-assets';
 const MANIFEST_KEY = '/__asset-manifest__';
