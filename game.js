@@ -70,8 +70,8 @@
   Board.setVessel = function (v) { Board.vessel = v; Board.cache = []; Board.layout(); Board.dirty = true; };
 
   // Redraw only as often as needed: every frame while something moves (pours, effects, a lifted bottle, the
-  // tutorial pulse), about 20 fps for the giant bottle's slow ripple, and otherwise only when something changed
-  // (Board.invalidate) plus a slow safety redraw. Saves battery on phones; looks the same.
+  // tutorial pulse) and for 1.5 s after, about 20 fps for the giant bottle's slow ripple, and otherwise only when
+  // something changed (Board.invalidate) plus a slow safety redraw. Saves battery on phones; looks the same.
   Board.dirty = true;
   Board.invalidate = function () { Board.dirty = true; };
   function busy() {
@@ -89,7 +89,7 @@
   Board.run = function () {
     if (Board.running) return;
     Board.running = true;
-    let last = 0;
+    let last = 0, activeAt = 0;
     const tick = () => {
       if (!Board.running) return;
       const pr = Board.canvas.parentElement;
@@ -97,7 +97,11 @@
       const t = now();
       const s = Board.s;
       const ambient = s && s.giant && !Board.reduce;
-      if (Board.dirty || busy() || (ambient && t - last >= 48) || t - last > 500) {
+      // anything happening keeps full-rate drawing on for a while afterwards, so play never runs at a reduced
+      // rate (iPhone also slows its display refresh while a page stops updating); rest only after 1.5 s of stillness
+      if (Board.dirty || busy()) activeAt = t;
+      const hot = t - activeAt < 1500;
+      if (hot || (ambient && t - last >= 48) || t - last > 500) {
         Board.dirty = false;
         last = t;
         Board.draw();
